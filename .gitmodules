@@ -1,0 +1,21 @@
+[submodule "components/component-1"]
+	path = components/component-1
+	url = https://github.com/Swarch2F/component-1.git
+[submodule "components/component-2-1"]
+	path = components/component-2-1
+	url = https://github.com/Swarch2F/component-2-1.git
+[submodule "components/component-2-2"]
+	path = components/component-2-2
+	url = https://github.com/Swarch2F/component-2-2.git
+[submodule "components/component-3"]
+	path = components/component-3
+	url = https://github.com/Swarch2F/component-3.git
+[submodule "components/component-4"]
+	path = components/component-4
+	url = https://github.com/Swarch2F/component-4.git
+[submodule "components/broker"]
+	path = components/broker
+	url = https://github.com/Swarch2F/broker.git
+[submodule "components/api-gateway"]
+	path = components/api-gateway
+	url = https://github.com/Swarch2F/api-gateway.git
