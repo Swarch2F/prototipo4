@@ -1,0 +1,219 @@
+version: '3.8'
+
+services:
+  # =============== API GATEWAY ===============
+  gx_comun_sia:
+    build:
+      context: ./components/api-gateway
+      dockerfile: Dockerfile
+    image: gx_comun_sia:latest
+    container_name: gx_comun_sia
+    ports:
+      - "9000:4000"
+    environment:
+      # URLs de los microservicios en la red de Docker
+      GX_BE_PROASIG_URL: "http://gx-comun-async:3000/broker/graphql"
+      GX_BE_CALIF_URL: "http://gx_be_calif:8080/graphql"
+      GX_AUTH_URL: "http://gx_be_auth:8080/api/v1"
+      GX_SIA_URL: "http://gx_be_estcur:8000/api"
+      PORT: 4000
+    depends_on:
+      - gx_be_estcur
+      - gx-comun-async
+      - gx_be_calif
+      - gx_be_auth
+    restart: always
+    networks:
+      - microservices-network
+
+  # =============== BROKER ===============
+  gx-comun-async:
+    build:
+      context: ./components/broker
+      dockerfile: Dockerfile
+    image: gx_comun_async:latest
+    container_name: gx_comun_async
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - RABBITMQ_URL=amqp://gx-comun-rabbit:5672
+    depends_on:
+      gx-comun-rabbit:
+        condition: service_healthy
+    restart: always
+    networks:
+      - microservices-network
+
+  # =============== RABBITMQ ===============
+  gx-comun-rabbit:
+    image: rabbitmq:3-management
+    container_name: gx_comun_rabbit
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: always
+    networks:
+      - microservices-network
+
+  # =============== MICROSERVICIO SIA COLEGIOS (Component-1) ===============
+  gx_be_estcur:
+    image: gx_be_estcur:latest
+    container_name: gx_be_estcur
+    build:
+      context: ./components/component-1
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8000"
+    environment:
+      - DB_HOST=gx_db_sia
+      - DB_NAME=sia_colegios
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_PORT=5432
+      - LOAD_INITIAL_DATA=true
+    command: ["django"]
+    depends_on:
+      - gx_db_sia
+    restart: always
+    networks:
+      - microservices-network
+
+  # Base de datos PostgreSQL para SIA Colegios
+  gx_db_sia:
+    image: postgres:17-alpine
+    container_name: gx_db_sia
+    environment:
+      POSTGRES_DB: sia_colegios
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_ENCODING: UTF8
+    ports:
+      - "5433:5432"
+    volumes:
+      - gx_db_sia_data:/var/lib/postgresql/data
+      - ./components/component-1/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    restart: always
+    networks:
+      - microservices-network
+
+  # =============== MICROSERVICIO DE AUTENTICACIÓN (Component-4) ===============
+  gx_be_auth:
+    build:
+      context: ./components/component-4
+      dockerfile: Dockerfile
+    image: gx_be_auth:latest
+    container_name: gx_be_auth
+    ports:
+      - "8082:8080"
+    environment:
+      PORT: 8080
+      JWT_SECRET: "mi-super-secreto-jwt-para-desarrollo-123456789"
+      GOOGLE_CLIENT_ID: ""
+      GOOGLE_CLIENT_SECRET: ""
+      GOOGLE_REDIRECT_URL: "http://localhost:8082/api/v1/auth/google/callback"
+    depends_on:
+      - gx_db_auth
+    restart: always
+    networks:
+      - microservices-network
+
+  # Base de datos PostgreSQL para autenticación
+  gx_db_auth:
+    image: postgres:16
+    container_name: gx_db_auth
+    environment:
+      POSTGRES_DB: authdb
+      POSTGRES_USER: authuser
+      POSTGRES_PASSWORD: authpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - gx_db_auth_data:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - microservices-network
+
+  # =============== MICROSERVICIO PROFESORES Y ASIGNATURAS (Component-2-1) ===============
+  gx_be_proasig:
+    image: gx_be_proasig:latest
+    container_name: gx_be_proasig
+    build:
+      context: ./components/component-2-1
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://gx_db_professors:27017/profesores_db
+      SPRING_GRAPHQL_SCHEMA_LOCATION: classpath:/graphql/
+    depends_on:
+      - gx_db_professors
+    restart: always
+    networks:
+      - microservices-network
+
+  # MongoDB para profesores y asignaturas
+  gx_db_professors:
+    image: mongo:6.0
+    container_name: gx_db_professors
+    ports:
+      - "27018:27017"
+    volumes:
+      - gx_db_professors_data:/data/db
+    restart: always
+    networks:
+      - microservices-network
+
+  # =============== MICROSERVICIO DE CALIFICACIONES (Component-2-2) ===============
+  gx_be_calif:
+    
+    build:
+      context: ./components/component-2-2
+      dockerfile: Dockerfile
+    image: gx_be_calif:latest
+    container_name: gx_be_calif
+    ports:
+      - "8081:8080"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://gx_db_grades:27017/calificaciones_db
+      SPRING_GRAPHQL_SCHEMA_LOCATION: classpath:/graphql/
+    depends_on:
+      - gx_db_grades
+    restart: always
+    networks:
+      - microservices-network
+
+  # MongoDB para calificaciones
+  gx_db_grades:
+    image: mongo:6.0
+    container_name: gx_db_grades
+    ports:
+      - "27019:27017"
+    volumes:
+      - gx_db_grades_data:/data/db
+    restart: always
+    networks:
+      - microservices-network
+
+# Volúmenes para persistencia de datos
+volumes:
+  gx_db_auth_data:
+  gx_db_professors_data:
+  gx_db_grades_data:
+  gx_db_sia_data:
+  rabbitmq_data:
+
+# Red para comunicación entre microservicios
+networks:
+  microservices-network:
+    driver: bridge
