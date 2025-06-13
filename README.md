@@ -21,7 +21,6 @@ git submodule add https://github.com/Swarch2F/component-3.git components/compone
 git submodule add https://github.com/Swarch2F/component-4.git components/component-4
 git submodule add https://github.com/Swarch2F/broker.git components/broker
 git submodule add https://github.com/Swarch2F/api-gateway.git components/api-gateway
-git submodule add https://github.com/Swarch2F/component-3.git components/component-3
 ```
 
 ## Actualización de submódulos recursivamente (por primer vez una vez clonado el proyecto):
