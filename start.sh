@@ -3,7 +3,7 @@
 # Verificar si existe el archivo .env
 if [ ! -f .env ]; then
     echo "Error: El archivo .env no existe"
-    echo "Por favor, crea un archivo .env basado en .env.example"
+    echo "Por favor, crea un archivo .env con las variables necesarias."
     exit 1
 fi
 
