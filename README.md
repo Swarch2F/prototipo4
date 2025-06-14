@@ -42,6 +42,14 @@ Una vez clonado el proyecto, ejecuta:
 docker compose up --build
 ```
 
+OJO, para ejecutar todo correctamente se necesitan las variables de entorno del servicio
+de autenticación, las cuales son sensibles, pero se puede cargar el archivo .env y ejecutar el scrip
+que automatiza todo:
+
+```bash
+./start.sh
+```
+
 ## Acceso a servicios
 
 Puedes acceder a cada servicio desde tu navegador en las siguientes rutas:
