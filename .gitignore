@@ -1,0 +1,35 @@
+# Archivos de entorno
+.env
+.env.local
+.env.*.local
+
+# Dependencias
+node_modules/
+vendor/
+__pycache__/
+*.pyc
+
+# Archivos de construcción
+dist/
+build/
+*.log
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de IDE y editores
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Archivos de cobertura y testing
+coverage/
+.coverage
+htmlcov/
+
+# Archivos temporales
+tmp/
+temp/
