@@ -137,13 +137,20 @@ services:
     ports:
       - "8082:8080"
     environment:
-      PORT: 8080
-      JWT_SECRET: ${JWT_SECRET}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      GOOGLE_REDIRECT_URL: ${GOOGLE_REDIRECT_URL}
+      - PORT=8080
+      - JWT_SECRET=${JWT_SECRET:-mi-super-secreto-jwt-para-desarrollo-123456789}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-tu-google-client-id-aqui}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-tu-google-client-secret-aqui}
+      - GOOGLE_REDIRECT_URL=${GOOGLE_REDIRECT_URL:-http://localhost:8082/api/v1/auth/google/callback}
+      - DB_HOST=auth-db
+      - DB_PORT=5432
+      - DB_USER=authuser
+      - DB_PASSWORD=authpass
+      - DB_NAME=authdb
+      - DB_SSL_MODE=disable
     depends_on:
-      - auth-db
+      auth-db:
+        condition: service_healthy
     restart: always
     networks:
       - microservices-network
@@ -156,10 +163,17 @@ services:
       POSTGRES_DB: authdb
       POSTGRES_USER: authuser
       POSTGRES_PASSWORD: authpass
+      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"
     volumes:
       - auth_db_data:/var/lib/postgresql/data
+      - ./components/component-4/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authuser -d authdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     restart: always
     networks:
       - microservices-network
