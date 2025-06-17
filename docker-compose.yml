@@ -24,7 +24,7 @@ services:
       context: ./components/api-gateway
       dockerfile: Dockerfile
     image: api-gateway:latest
-    container_name: api-gateway
+    container_name: gx_api_gateway
     ports:
       - "9000:4000"
     environment:
@@ -48,7 +48,7 @@ services:
       context: ./components/broker
       dockerfile: Dockerfile
     image: gx_comun_async:latest
-    container_name: gx_comun_async
+    container_name: gx_be_comun_async
     ports:
       - "3000:3000"
     environment:
@@ -65,7 +65,7 @@ services:
   # =============== RABBITMQ ===============
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: rabbitmq
+    container_name: gx_be_rabbitmq
     ports:
       - "5673:5672"
       - "15673:15672"
@@ -89,7 +89,7 @@ services:
       context: ./components/component-1
       dockerfile: Dockerfile
     image: component-1:latest
-    container_name: component-1
+    container_name: gx_be_estcur
     ports:
       - "8083:8000"
     environment:
@@ -109,7 +109,7 @@ services:
   # Base de datos PostgreSQL para SIA Colegios
   sia-db:
     image: postgres:17-alpine
-    container_name: sia-db
+    container_name: gx_db_estcur
     environment:
       POSTGRES_DB: sia_colegios
       POSTGRES_USER: postgres
@@ -130,7 +130,7 @@ services:
       context: ./components/component-2-1
       dockerfile: Dockerfile
     image: component-2-1:latest
-    container_name: component-2-1
+    container_name: gx_be_proasig
     ports:
       - "8080:8080"
     environment:
@@ -145,7 +145,7 @@ services:
   # MongoDB para profesores y asignaturas
   mongo-professors:
     image: mongo:6.0
-    container_name: mongo-professors
+    container_name: gx_db_proasig
     ports:
       - "27018:27017"
     volumes:
@@ -160,7 +160,7 @@ services:
       context: ./components/component-2-2
       dockerfile: Dockerfile
     image: component-2-2:latest
-    container_name: component-2-2
+    container_name: gx_be_calif
     ports:
       - "8081:8080"
     environment:
@@ -175,7 +175,7 @@ services:
   # MongoDB para calificaciones
   mongo-grades:
     image: mongo:6.0
-    container_name: mongo-grades
+    container_name: gx_db_calif
     ports:
       - "27019:27017"
     volumes:
