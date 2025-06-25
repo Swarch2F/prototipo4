@@ -32,11 +32,14 @@ services:
       GX_BE_PROASIG_URL: "http://gx_comun_async:3000/broker/graphql"
       GX_BE_CALIF_URL: "http://component-2-2:8080/graphql"
       GX_SIA_URL: "http://component-1:8000/api"
+      GX_AUTH_URL: "http://component-4:8082/api/v1"
+
       PORT: 4000
     depends_on:
       - component-1
       - component-2-1
       - component-2-2
+      - component-4
       - gx_comun_async
     restart: always
     networks:
@@ -124,6 +127,62 @@ services:
     networks:
       - microservices-network
 
+
+  # =============== MICROSERVICIO DE AUTENTICACIÓN (Component-4) ===============
+  component-4:
+    build:
+      context: ./components/component-4
+      dockerfile: Dockerfile
+    image: gx_be_auth:latest
+    container_name: gx_be_auth
+    ports:
+      - "8082:8082"
+    environment:
+      - PORT=8082
+      - JWT_SECRET="nbu8dTVEoJ/1pnIaOj+JM+Jrui/jLvtIKmXgGScb1ndzEfBb4GbqIz45gcMdRmb4ptfBNA1+/sCtttvpZPL8Vg"
+      - JWT_EXPIRATION=3600 # 1 hora
+      - GOOGLE_CLIENT_ID="97072811302-e0foheebjj6kto3k8efabljk2t453vbe.apps.googleusercontent.com"
+      - GOOGLE_CLIENT_SECRET="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"
+      - GOOGLE_REDIRECT_URL=http://localhost:3001/auth/callback
+      - DB_HOST=gx_db_auth
+      - DB_PORT=5432
+      - DB_USER=authuser
+      - DB_PASSWORD=authpass
+      - DB_NAME=authdb
+      - DB_SSL_MODE=disable
+      - FrontendURL=http://localhost:3001
+    depends_on:
+      gx_db_auth:
+        condition: service_healthy
+    restart: always
+    networks:
+      - microservices-network
+
+  # Base de datos PostgreSQL para autenticación
+  gx_db_auth:
+    image: postgres:16
+    container_name: gx_db_auth
+    environment:
+      POSTGRES_DB: authdb
+      POSTGRES_USER: authuser
+      POSTGRES_PASSWORD: authpass
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+      - ./components/component-4/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authuser -d authdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+    networks:
+      - microservices-network
+
+
+
   # =============== MICROSERVICIO PROFESORES Y ASIGNATURAS (Component-2-1) ===============
   component-2-1:
     build:
@@ -186,6 +245,7 @@ services:
 
 # Volúmenes para persistencia de datos
 volumes:
+  auth_db_data:
   mongo_professors_data:
   mongo_grades_data:
   sia_db_data:
