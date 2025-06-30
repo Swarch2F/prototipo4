@@ -29,41 +29,41 @@ services:
       - "9000:4000"
     environment:
       # URLs de los microservicios en la red de Docker
-      GX_BE_PROASIG_URL: "http://gx_comun_async:3000/broker/graphql"
+      GX_BE_PROASIG_URL: "http://component-2-1:8080/graphql"
       GX_BE_CALIF_URL: "http://component-2-2:8080/graphql"
       GX_SIA_URL: "http://component-1:8000/api"
       GX_AUTH_URL: "http://component-4:8082/api/v1"
-
+      RABBITMQ_URL: "amqp://rabbitmq:5672"
       PORT: 4000
     depends_on:
       - component-1
       - component-2-1
       - component-2-2
       - component-4
-      - gx_comun_async
+      - rabbitmq
     restart: always
     networks:
       - microservices-network
 
-  # =============== BROKER ===============
-  gx_comun_async:
-    build:
-      context: ./components/broker
-      dockerfile: Dockerfile
-    image: gx_comun_async:latest
-    container_name: gx_be_comun_async
-    ports:
-      - "3000:3000"
-    environment:
-      - PORT=3000
-      - RABBITMQ_URL=amqp://rabbitmq:5672
-      - PROASIG_SERVICE_URL=http://component-2-1:8080
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    restart: always
-    networks:
-      - microservices-network
+  # =============== BROKER (DESHABILITADO - INTEGRADO EN API GATEWAY) ===============
+  # gx_comun_async:
+  #   build:
+  #     context: ./components/broker
+  #     dockerfile: Dockerfile
+  #   image: gx_comun_async:latest
+  #   container_name: gx_be_comun_async
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - PORT=3000
+  #     - RABBITMQ_URL=amqp://rabbitmq:5672
+  #     - PROASIG_SERVICE_URL=http://component-2-1:8080
+  #   depends_on:
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   restart: always
+  #   networks:
+  #     - microservices-network
 
   # =============== RABBITMQ ===============
   rabbitmq:
