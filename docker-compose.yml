@@ -1,6 +1,26 @@
 version: '3.8'
 
 services:
+  # =============== NGINX PROXY INVERSO HTTPS ===============
+  nginx-proxy:
+    build:
+      context: ./components/nginx
+      dockerfile: Dockerfile
+    image: gradex-nginx-proxy:latest
+    container_name: gx_nginx_proxy
+    ports:
+      - "80:80"     # HTTP (solo para redirección a HTTPS)
+      - "443:443"   # HTTPS (puerto principal)
+    volumes:
+      - ./components/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api-gateway
+      - gx_fe_gradex
+    restart: always
+    networks:
+      - public-network      # Red pública (nginx tiene acceso externo)
+      - private-network     # Red privada (nginx comunica con servicios internos)
+
   # =============== FRONTEND ===============
   gx_fe_gradex:
     build:
@@ -8,15 +28,16 @@ services:
       dockerfile: Dockerfile
     image: gx_fe_gradex:latest
     container_name: gx_fe_gradex
-    ports:
-      - "3001:3000"
+    # Puerto interno solamente - acceso vía proxy HTTPS
+    expose:
+      - "3000"
     environment:
-      - API_URL=http://api-gateway:9000
+      - API_URL=https://localhost/graphql  # Ahora a través del proxy HTTPS
     depends_on:
       - api-gateway
     restart: always
     networks:
-      - microservices-network
+      - private-network  # Solo red privada (sin acceso externo directo)
 
   # =============== API GATEWAY ===============
   api-gateway:
@@ -25,10 +46,11 @@ services:
       dockerfile: Dockerfile
     image: api-gateway:latest
     container_name: gx_api_gateway
-    ports:
-      - "9000:4000"
+    # Puerto interno solamente - acceso vía proxy HTTPS
+    expose:
+      - "4000"
     environment:
-      # URLs de los microservicios en la red de Docker
+      # URLs de los microservicios en la red privada
       GX_BE_PROASIG_URL: "http://gx_comun_async:3000/broker/graphql"
       GX_BE_CALIF_URL: "http://component-2-2:8080/graphql"
       GX_SIA_URL: "http://component-1:8000/api"
@@ -43,7 +65,7 @@ services:
       - gx_comun_async
     restart: always
     networks:
-      - microservices-network
+      - private-network  # Solo red privada (protegido por proxy)
 
   # =============== BROKER ===============
   gx_comun_async:
@@ -52,8 +74,8 @@ services:
       dockerfile: Dockerfile
     image: gx_comun_async:latest
     container_name: gx_be_comun_async
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     environment:
       - PORT=3000
       - RABBITMQ_URL=amqp://rabbitmq:5672
@@ -63,15 +85,15 @@ services:
         condition: service_healthy
     restart: always
     networks:
-      - microservices-network
+      - private-network  # Red privada protegida
 
   # =============== RABBITMQ ===============
   rabbitmq:
     image: rabbitmq:3-management
     container_name: gx_be_rabbitmq
-    ports:
-      - "5673:5672"
-      - "15673:15672"
+    expose:
+      - "5672"   # Puerto AMQP para comunicación interna
+      - "15672"  # Puerto management para comunicación interna
     environment:
       - RABBITMQ_DEFAULT_USER=guest
       - RABBITMQ_DEFAULT_PASS=guest
@@ -84,7 +106,7 @@ services:
       retries: 5
     restart: always
     networks:
-      - microservices-network
+      - private-network  # Red privada protegida
 
   # =============== MICROSERVICIO SIA COLEGIOS (Component-1) ===============
   component-1:
@@ -93,8 +115,8 @@ services:
       dockerfile: Dockerfile
     image: component-1:latest
     container_name: gx_be_estcur
-    ports:
-      - "8083:8000"
+    expose:
+      - "8000"
     environment:
       - DB_HOST=sia-db
       - DB_NAME=sia_colegios
@@ -107,7 +129,7 @@ services:
       - sia-db
     restart: always
     networks:
-      - microservices-network
+      - private-network  # Red privada protegida
 
   # Base de datos PostgreSQL para SIA Colegios
   sia-db:
@@ -118,14 +140,14 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_ENCODING: UTF8
-    ports:
-      - "5433:5432"
+    expose:
+      - "5432"
     volumes:
       - sia_db_data:/var/lib/postgresql/data
       - ./components/component-1/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     restart: always
     networks:
-      - microservices-network
+      - private-network  # Red privada protegida
 
 
   # =============== MICROSERVICIO DE AUTENTICACIÓN (Component-4) ===============
@@ -135,8 +157,8 @@ services:
       dockerfile: Dockerfile
     image: gx_be_auth:latest
     container_name: gx_be_auth
-    ports:
-      - "8082:8082"
+    expose:
+      - "8082"
     environment:
       - PORT=8082
       - JWT_SECRET="nbu8dTVEoJ/1pnIaOj+JM+Jrui/jLvtIKmXgGScb1ndzEfBb4GbqIz45gcMdRmb4ptfBNA1+/sCtttvpZPL8Vg"
@@ -156,7 +178,7 @@ services:
         condition: service_healthy
     restart: always
     networks:
-      - microservices-network
+      - private-network  # Red privada protegida
 
   # Base de datos PostgreSQL para autenticación
   gx_db_auth:
@@ -167,8 +189,8 @@ services:
       POSTGRES_USER: authuser
       POSTGRES_PASSWORD: authpass
       PGDATA: /var/lib/postgresql/data/pgdata
-    ports:
-      - "5432:5432"
+    expose:
+      - "5432"
     volumes:
       - auth_db_data:/var/lib/postgresql/data
       - ./components/component-4/migrations:/docker-entrypoint-initdb.d
@@ -179,7 +201,7 @@ services:
       retries: 5
     restart: always
     networks:
-      - microservices-network
+      - private-network  # Red privada protegida
 
 
 
@@ -190,8 +212,8 @@ services:
       dockerfile: Dockerfile
     image: component-2-1:latest
     container_name: gx_be_proasig
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://mongo-professors:27017/profesores_db
       SPRING_GRAPHQL_SCHEMA_LOCATION: classpath:/graphql/
@@ -199,19 +221,19 @@ services:
       - mongo-professors
     restart: always
     networks:
-      - microservices-network
+      - private-network  # Red privada protegida
 
   # MongoDB para profesores y asignaturas
   mongo-professors:
     image: mongo:6.0
     container_name: gx_db_proasig
-    ports:
-      - "27018:27017"
+    expose:
+      - "27017"
     volumes:
       - mongo_professors_data:/data/db
     restart: always
     networks:
-      - microservices-network
+      - private-network  # Red privada protegida
 
   # =============== MICROSERVICIO DE CALIFICACIONES (Component-2-2) ===============
   component-2-2:
@@ -220,8 +242,8 @@ services:
       dockerfile: Dockerfile
     image: component-2-2:latest
     container_name: gx_be_calif
-    ports:
-      - "8081:8080"
+    expose:
+      - "8080"
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://mongo-grades:27017/calificaciones_db
       SPRING_GRAPHQL_SCHEMA_LOCATION: classpath:/graphql/
@@ -229,19 +251,19 @@ services:
       - mongo-grades
     restart: always
     networks:
-      - microservices-network
+      - private-network  # Red privada protegida
 
   # MongoDB para calificaciones
   mongo-grades:
     image: mongo:6.0
     container_name: gx_db_calif
-    ports:
-      - "27019:27017"
+    expose:
+      - "27017"
     volumes:
       - mongo_grades_data:/data/db
     restart: always
     networks:
-      - microservices-network
+      - private-network  # Red privada protegida
 
 # Volúmenes para persistencia de datos
 volumes:
@@ -251,7 +273,21 @@ volumes:
   sia_db_data:
   rabbitmq_data:
 
-# Red para comunicación entre microservicios
+# =============== SEGMENTACIÓN DE RED PARA SEGURIDAD ===============
 networks:
-  microservices-network:
+  # Red pública - Solo nginx proxy tiene acceso externo
+  public-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+    # Acceso desde el exterior únicamente a través del proxy
+    
+  # Red privada - Todos los microservicios y bases de datos
+  private-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+    internal: false  # Permitir salida a internet para updates/dependencias
+    # Solo nginx proxy puede acceder desde el exterior
