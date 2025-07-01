@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # =============== NGINX PROXY INVERSO HTTPS ===============
+  nginx-proxy:
+    build:
+      context: ./components/nginx
+      dockerfile: Dockerfile
+    image: gradex-nginx-proxy:latest
+    container_name: gx_nginx_proxy
+    ports:
+      - "80:80"     # HTTP (solo para redirección a HTTPS)
+      - "443:443"   # HTTPS (puerto principal)
+    volumes:
+      - ./components/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api-gateway
+      - gx_fe_gradex
+    restart: always
+    networks:
+      - public-network      # Red pública (nginx tiene acceso externo)
+      - private-network     # Red privada (nginx comunica con servicios internos)
+
+  # =============== FRONTEND (ESCALABLE) ===============
+  gx_fe_gradex:
+    build:
+      context: ./components/component-3
+      dockerfile: Dockerfile
+    image: gx_fe_gradex:latest
+    # Puerto interno solamente - acceso vía proxy HTTPS
+    expose:
+      - "3000"
+    environment:
+      - API_URL=https://localhost/graphql  # Ahora a través del proxy HTTPS
+    depends_on:
+      - api-gateway
+    restart: always
+    networks:
+      - private-network  # Solo red privada (sin acceso externo directo)
+    deploy:
+      replicas: 3  # Para Docker Swarm
+      
+  # ... resto de servicios igual que en el archivo original
+
+# Resto de la configuración...
+networks:
+  public-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+  private-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+    internal: false
+
+volumes:
+  auth_db_data:
+  mongo_professors_data:
+  mongo_grades_data:
+  sia_db_data:
+  rabbitmq_data:
