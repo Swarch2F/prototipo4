@@ -1,7 +1,30 @@
 version: '3.8'
 
 services:
-  # =============== NGINX PROXY INVERSO HTTPS ===============
+  # =============== NGINX BALANCEADOR DE CARGA (PÚBLICO, SOLO FRONTEND) ===============
+  nginx-balancer:
+    build:
+      context: ./components/nginx
+      dockerfile: Dockerfile
+    image: gradex-nginx-balancer:latest
+    container_name: gx_nginx_balancer
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./components/nginx/nginx.balancer.conf:/etc/nginx/nginx.conf:ro
+      - ./components/nginx/ssl/balancer.crt:/etc/nginx/ssl/balancer.crt:ro
+      - ./components/nginx/ssl/balancer.key:/etc/nginx/ssl/balancer.key:ro
+      - ./components/nginx/ssl/dhparam.pem:/etc/nginx/ssl/dhparam.pem:ro
+    depends_on:
+      - gx_fe_gradex_1
+      - gx_fe_gradex_2
+      - gx_fe_gradex_3
+    restart: always
+    networks:
+      - public-network
+
+  # =============== NGINX PROXY INVERSO PARA API GATEWAY (PÚBLICO Y PRIVADO, SOLO /graphql) ===============
   nginx-proxy:
     build:
       context: ./components/nginx
@@ -9,54 +32,85 @@ services:
     image: gradex-nginx-proxy:latest
     container_name: gx_nginx_proxy
     ports:
-      - "80:80"     # HTTP (solo para redirección a HTTPS)
-      - "443:443"   # HTTPS (puerto principal)
+      - "444:443" # HTTPS para /graphql (puedes usar otro puerto o dominio)
     volumes:
-      - ./components/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./components/nginx/nginx.proxy.conf:/etc/nginx/nginx.conf:ro
+      - ./components/nginx/ssl/proxy.crt:/etc/nginx/ssl/proxy.crt:ro
+      - ./components/nginx/ssl/proxy.key:/etc/nginx/ssl/proxy.key:ro
+      - ./components/nginx/ssl/dhparam.pem:/etc/nginx/ssl/dhparam.pem:ro
+      - nginx_proxy_cache:/var/cache/nginx
     depends_on:
       - api-gateway
-      - gx_fe_gradex
     restart: always
     networks:
-      - public-network      # Red pública (nginx tiene acceso externo)
-      - private-network     # Red privada (nginx comunica con servicios internos)
+      - public-network
+      - private-network
 
-  # =============== FRONTEND ===============
-  gx_fe_gradex:
+  # =============== FRONTEND (3 INSTANCIAS, RED PÚBLICA) ===============
+  gx_fe_gradex_1:
     build:
       context: ./components/component-3
       dockerfile: Dockerfile
     image: gx_fe_gradex:latest
-    container_name: gx_fe_gradex
-    # Puerto interno solamente - acceso vía proxy HTTPS
+    container_name: gx_fe_gradex_1
     expose:
       - "3000"
     environment:
-      - API_URL=https://localhost/graphql  # Ahora a través del proxy HTTPS
+      - API_URL=https://localhost:444/graphql
+      - INSTANCE_ID=1
     depends_on:
-      - api-gateway
+      - nginx-proxy
     restart: always
     networks:
-      - private-network  # Solo red privada (sin acceso externo directo)
+      - public-network
 
-  # =============== API GATEWAY ===============
+  gx_fe_gradex_2:
+    image: gx_fe_gradex:latest
+    container_name: gx_fe_gradex_2
+    expose:
+      - "3000"
+    environment:
+      - API_URL=https://localhost:444/graphql
+      - INSTANCE_ID=2
+    depends_on:
+      - nginx-proxy
+      - gx_fe_gradex_1
+    restart: always
+    networks:
+      - public-network
+
+  gx_fe_gradex_3:
+    image: gx_fe_gradex:latest
+    container_name: gx_fe_gradex_3
+    expose:
+      - "3000"
+    environment:
+      - API_URL=https://localhost:444/graphql
+      - INSTANCE_ID=3
+    depends_on:
+      - nginx-proxy
+      - gx_fe_gradex_1
+    restart: always
+    networks:
+      - public-network
+
+  # =============== API GATEWAY (SOLO RED PRIVADA) ===============
   api-gateway:
     build:
       context: ./components/api-gateway
       dockerfile: Dockerfile
     image: api-gateway:latest
     container_name: gx_api_gateway
-    # Puerto interno solamente - acceso vía proxy HTTPS
     expose:
       - "4000"
     environment:
-      # URLs de los microservicios en la red de Docker
-      GX_BE_PROASIG_URL: "http://component-2-1:8080/graphql"
-      GX_BE_CALIF_URL: "http://component-2-2:8080/graphql"
-      GX_SIA_URL: "http://component-1:8000/api"
-      GX_AUTH_URL: "http://component-4:8082/api/v1"
-      RABBITMQ_URL: "amqp://rabbitmq:5672"
-      PORT: 4000
+      - GX_BE_PROASIG_URL=http://component-2-1:8080/graphql
+      - GX_BE_CALIF_URL=http://component-2-2:8080/graphql
+      - GX_SIA_URL=http://component-1:8000/api
+      - GX_AUTH_URL=http://component-4:8082/api/v1
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - PORT=4000
+      - GX_FE_URL=https://localhost
     depends_on:
       - component-1
       - component-2-1
@@ -65,9 +119,7 @@ services:
       - rabbitmq
     restart: always
     networks:
-      - private-network  # Solo red privada (protegido por proxy)
-
-
+      - private-network
 
   # =============== RABBITMQ ===============
   rabbitmq:
@@ -254,6 +306,7 @@ volumes:
   mongo_grades_data:
   sia_db_data:
   rabbitmq_data:
+  nginx_proxy_cache:
 
 # =============== SEGMENTACIÓN DE RED PARA SEGURIDAD ===============
 networks:

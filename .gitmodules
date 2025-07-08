@@ -7,9 +7,6 @@
 [submodule "components/component-2-2"]
 	path = components/component-2-2
 	url = https://github.com/Swarch2F/component-2-2.git
-[submodule "components/broker"]
-	path = components/broker
-	url = https://github.com/Swarch2F/broker.git
 [submodule "components/api-gateway"]
 	path = components/api-gateway
 	url = https://github.com/Swarch2F/api-gateway.git
