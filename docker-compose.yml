@@ -38,6 +38,7 @@ services:
       - ./components/nginx/ssl/proxy.crt:/etc/nginx/ssl/proxy.crt:ro
       - ./components/nginx/ssl/proxy.key:/etc/nginx/ssl/proxy.key:ro
       - ./components/nginx/ssl/dhparam.pem:/etc/nginx/ssl/dhparam.pem:ro
+      - nginx_proxy_cache:/var/cache/nginx
     depends_on:
       - api-gateway
     restart: always
@@ -305,6 +306,7 @@ volumes:
   mongo_grades_data:
   sia_db_data:
   rabbitmq_data:
+  nginx_proxy_cache:
 
 # =============== SEGMENTACIÓN DE RED PARA SEGURIDAD ===============
 networks:
