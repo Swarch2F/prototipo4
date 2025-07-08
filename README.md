@@ -41,7 +41,6 @@ git submodule add https://github.com/Swarch2F/component-2-1.git components/compo
 git submodule add https://github.com/Swarch2F/component-2-2.git components/component-2-2
 git submodule add https://github.com/Swarch2F/component-3.git components/component-3
 git submodule add https://github.com/Swarch2F/component-4.git components/component-4
-git submodule add https://github.com/Swarch2F/broker.git components/broker
 git submodule add https://github.com/Swarch2F/api-gateway.git components/api-gateway
 ```
 
