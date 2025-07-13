@@ -13,8 +13,9 @@ services:
       - "443:443"
     volumes:
       - ./components/nginx/nginx.balancer.conf:/etc/nginx/nginx.conf:ro
-      - ./components/nginx/ssl/balancer.crt:/etc/nginx/ssl/balancer.crt:ro
-      - ./components/nginx/ssl/balancer.key:/etc/nginx/ssl/balancer.key:ro
+      - ./components/nginx/ssl/certificate.crt:/etc/nginx/ssl/certificate.crt:ro
+      - ./components/nginx/ssl/private.key:/etc/nginx/ssl/private.key:ro
+      - ./components/nginx/ssl/ca_bundle.crt:/etc/nginx/ssl/ca_bundle.crt:ro
       - ./components/nginx/ssl/dhparam.pem:/etc/nginx/ssl/dhparam.pem:ro
     depends_on:
       - gx_fe_gradex_1
@@ -35,8 +36,9 @@ services:
       - "444:443" # HTTPS para /graphql (puedes usar otro puerto o dominio)
     volumes:
       - ./components/nginx/nginx.proxy.conf:/etc/nginx/nginx.conf:ro
-      - ./components/nginx/ssl/proxy.crt:/etc/nginx/ssl/proxy.crt:ro
-      - ./components/nginx/ssl/proxy.key:/etc/nginx/ssl/proxy.key:ro
+      - ./components/nginx/ssl/certificate.crt:/etc/nginx/ssl/certificate.crt:ro
+      - ./components/nginx/ssl/private.key:/etc/nginx/ssl/private.key:ro
+      - ./components/nginx/ssl/ca_bundle.crt:/etc/nginx/ssl/ca_bundle.crt:ro
       - ./components/nginx/ssl/dhparam.pem:/etc/nginx/ssl/dhparam.pem:ro
       - nginx_proxy_cache:/var/cache/nginx
     depends_on:
