@@ -221,3 +221,18 @@ La cual es:
 | gx_be_auth           | 6.93               |
 
 > **Nota:** Los valores corresponden a una medición puntual con `docker stats` y pueden variar levemente según la carga y el momento de la consulta.
+
+
+### 🖥️ Tabla final de VMs recomendadas (us-east1, priorizando Free Tier)
+
+| Microservicio / Grupo                                      | Tipo de VM recomendado | CPUs | RAM (GB) | Motivo/respaldo                        |
+|------------------------------------------------------------|-----------------------|------|----------|-----------------------------------------|
+| Component-1 (Django)                                       | e2-micro              | 2    | 1        | Suficiente, Free Tier                  |
+| Component-2-1 (Spring Boot, Profesores)                    | e2-small              | 2    | 2        | Java necesita más margen                |
+| Component-2-2 (Spring Boot, Calificaciones)                | e2-small              | 2    | 2        | Java necesita más margen                |
+| Component-4 (Go/Auth)                                      | e2-micro              | 2    | 1        | Suficiente, Free Tier                  |
+| RabbitMQ                                                   | e2-micro              | 2    | 1        | Suficiente, Free Tier                  |
+| Frontends + Nginx balancer (3 instancias Next.js + Nginx)  | e2-small              | 2    | 2        | 3 frontends, margen de RAM             |
+| Proxy + API Gateway                                        | e2-micro              | 2    | 1        | Suficiente, Free Tier                  |
+
+> **Nota:** Se priorizan instancias e2-micro para aprovechar el Free Tier de Google Cloud siempre que sea posible. Para servicios Java y frontends múltiples, se recomienda e2-small para evitar problemas de memoria.
