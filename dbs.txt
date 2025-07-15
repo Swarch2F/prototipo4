@@ -1,0 +1,18 @@
+# authdb
+
+POSTGRESQL_ADDON_HOST=bh4bhaewrpd8qqcreso5-postgresql.services.clever-cloud.com
+POSTGRESQL_ADDON_DB=bh4bhaewrpd8qqcreso5
+POSTGRESQL_ADDON_USER=uo8h6cfqdm4u5xv6lfqq
+POSTGRESQL_ADDON_PORT=5432
+POSTGRESQL_ADDON_PASSWORD=dsJBQr44561wnu9YizPLTeP1GFh0eO
+POSTGRESQL_ADDON_URI=postgresql://uo8h6cfqdm4u5xv6lfqq:dsJBQr44561wnu9YizPLTeP1GFh0eO@bh4bhaewrpd8qqcreso5-postgresql.services.clever-cloud.com:5432/bh4bhaewrpd8qqcreso5
+
+
+# sia_colegios
+
+POSTGRESQL_ADDON_HOST=bsbw9dp2f3op72g15kex-postgresql.services.clever-cloud.com
+POSTGRESQL_ADDON_DB=bsbw9dp2f3op72g15kex
+POSTGRESQL_ADDON_USER=uqk2fld6uttfdd7auvj5
+POSTGRESQL_ADDON_PORT=5432
+POSTGRESQL_ADDON_PASSWORD=iDbHihYT1wr6W4cbd0RaZ3rJ2TMyz8
+POSTGRESQL_ADDON_URI=postgresql://uqk2fld6uttfdd7auvj5:iDbHihYT1wr6W4cbd0RaZ3rJ2TMyz8@bsbw9dp2f3op72g15kex-postgresql.services.clever-cloud.com:5432/bsbw9dp2f3op72g15kex

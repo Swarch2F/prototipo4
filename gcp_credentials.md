@@ -66,6 +66,7 @@ mongosh "mongodb://34.56.58.46:27017/profesores_db"
 
 # Conectar a mongo-calificaciones
 mongosh "mongodb://34.61.138.228:27017/calificaciones_db"
+
 ```
 
 ## 🛡️ **Configuración de Firewall**
@@ -79,34 +80,42 @@ mongosh "mongodb://34.61.138.228:27017/calificaciones_db"
 ## 📋 **Variables de Entorno para Docker**
 
 ### Component-1 (Django - SIA Colegios)
+
 ```yaml
 environment:
   - DB_HOST=35.232.229.161
   - DB_NAME=sia_colegios
   - DB_USER=postgres
+
   - DB_PASSWORD=postgres
   - DB_PORT=5432
 ```
 
 ### Component-4 (Go - Autenticación)
+
 ```yaml
 environment:
   - DB_HOST=34.45.100.245
   - DB_PORT=5432
+
   - DB_USER=authuser
   - DB_PASSWORD=authpass
   - DB_NAME=authdb
+
 ```
 
 ### Component-2-1 (Spring Boot - Profesores)
 ```yaml
 environment:
+
   - SPRING_DATA_MONGODB_URI=mongodb://34.56.58.46:27017/profesores_db
+
 ```
 
 ### Component-2-2 (Spring Boot - Calificaciones)
 ```yaml
 environment:
+
   - SPRING_DATA_MONGODB_URI=mongodb://34.61.138.228:27017/calificaciones_db
 ```
 
@@ -123,6 +132,7 @@ environment:
 
 1. **Seguridad:** Estas credenciales son para desarrollo. En producción, usa contraseñas más seguras.
 2. **Firewall:** Las reglas de firewall permiten conexiones desde cualquier IP. En producción, restringe a IPs específicas.
+
 3. **Backup:** Configura backups automáticos en GCP.
 4. **Monitoreo:** Usa Cloud Monitoring para monitorear el rendimiento de las bases de datos.
 5. **Consistencia:** Las contraseñas en GCP coinciden exactamente con las del docker-compose.
@@ -130,13 +140,16 @@ environment:
 ## 🔍 **Comandos de Verificación**
 
 ### Verificar instancias de Cloud SQL (PostgreSQL)
+
 ```bash
 gcloud sql instances list --project=bright-aloe-465517-q3
 ```
 
 ### Verificar instancias de Compute Engine (MongoDB)
 ```bash
+
 gcloud compute instances list --filter="name~mongo" --project=bright-aloe-465517-q3
+
 ```
 
 ### Verificar reglas de firewall
@@ -148,16 +161,20 @@ gcloud compute firewall-rules list --filter="name=allow-mongo"
 
 **Proyecto GCP:** bright-aloe-465517-q3  
 **Región principal:** northamerica-south1  
+
 **Última actualización:** 2025-07-14 
+
 
 ## 🚀 **Optimizaciones de Conexión y Timeout**
 
 ### Configuraciones Implementadas para Mejorar la Comunicación con GCP
 
+
 #### 1. **PostgreSQL (Component-1 y Component-4) - CLOUD SQL**
 - **Pool Size**: Configurado para Cloud SQL
 - **SSL Mode**: Configurado según necesidades
 - **Timeout**: 30 segundos para conexiones
+
 
 #### 2. **MongoDB (Component-2-1 y Component-2-2) - OPTIMIZADO**
 - **Pool Size**: 2-10 conexiones (reducido de 5-20)
@@ -183,6 +200,7 @@ gcloud compute firewall-rules list --filter="name=allow-mongo"
 
 **Error anterior**: 
 ```
+
 connection to server failed: FATAL: remaining connection slots are reserved for roles with privileges
 ```
 
@@ -191,15 +209,19 @@ connection to server failed: FATAL: remaining connection slots are reserved for 
 - Optimizado tiempo de vida de conexiones
 - Mejorado manejo de conexiones idle
 
+
 ### Beneficios de estas Optimizaciones
 
 1. **✅ Eliminación de errores de agotamiento de conexiones**
+
 2. **✅ Mejor manejo de conexiones** a bases de datos GCP
+
 3. **✅ Inicio ordenado** de servicios con dependencias
 4. **✅ Monitoreo automático** de salud de servicios
 5. **✅ Recuperación automática** en caso de fallos temporales
 
 ### 🎯 **Estado Actual del Sistema**
+
 
 - **✅ Component-1 (Django/SIA)**: Conectado a PostgreSQL Cloud SQL
 - **✅ Component-4 (Go/Auth)**: Conectado a PostgreSQL Cloud SQL
@@ -207,3 +229,4 @@ connection to server failed: FATAL: remaining connection slots are reserved for 
 - **✅ Component-2-2 (Spring/Calificaciones)**: Conectado a MongoDB GCP
 - **✅ API Gateway**: Funcionando correctamente, health check OK
 - **✅ Lectura de datos**: Problema de conexiones resuelto
+

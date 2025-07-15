@@ -154,37 +154,75 @@ services:
     expose:
       - "8000"
     environment:
-      - DB_HOST=sia-db
+      - DB_HOST=35.232.229.161
       - DB_NAME=sia_colegios
       - DB_USER=postgres
-      - DB_PASSWORD=postgres
+      - DB_PASSWORD=postgres123
       - DB_PORT=5432
       - LOAD_INITIAL_DATA=true
     command: ["django"]
-    depends_on:
-      - sia-db
+    depends_on: []
+      # - sia-db
     restart: always
     networks:
       - private-network  # Red privada protegida
 
-  # Base de datos PostgreSQL para SIA Colegios
-  sia-db:
-    image: postgres:17-alpine
-    container_name: gx_db_estcur
-    environment:
-      POSTGRES_DB: sia_colegios
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_ENCODING: UTF8
+  # Eliminar servicios de bases de datos locales y sus dependencias
+  # sia-db:
+  #   ...
+  # gx_db_auth:
+  #   ...
+  # mongo-professors:
+  #   ...
+  # mongo-grades:
+  #   ...
+
+
+  # =============== MICROSERVICIO PROFESORES Y ASIGNATURAS (Component-2-1) ===============
+  component-2-1:
+    build:
+      context: ./components/component-2-1
+      dockerfile: Dockerfile
+    image: component-2-1:latest
+    container_name: gx_be_proasig
     expose:
-      - "5432"
-    volumes:
-      - sia_db_data:/var/lib/postgresql/data
-      - ./components/component-1/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+      - "8080"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://34.61.138.228:27017/profesores_db
+      - SPRING_GRAPHQL_SCHEMA_LOCATION=classpath:/graphql/
+    depends_on: []
+      # - mongo-professors
     restart: always
     networks:
       - private-network  # Red privada protegida
 
+  # Eliminar servicios de bases de datos locales y sus dependencias
+  # sia-db:
+  #   ...
+  # gx_db_auth:
+  #   ...
+  # mongo-professors:
+  #   ...
+  # mongo-grades:
+  #   ...
+
+  # =============== MICROSERVICIO DE CALIFICACIONES (Component-2-2) ===============
+  component-2-2:
+    build:
+      context: ./components/component-2-2
+      dockerfile: Dockerfile
+    image: component-2-2:latest
+    container_name: gx_be_calif
+    expose:
+      - "8080"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://34.56.58.46:27017/calificaciones_db
+      - SPRING_GRAPHQL_SCHEMA_LOCATION=classpath:/graphql/
+    depends_on: []
+      # - mongo-grades
+    restart: always
+    networks:
+      - private-network  # Red privada protegida
 
   # =============== MICROSERVICIO DE AUTENTICACIÓN (Component-4) ===============
   component-4:
@@ -202,101 +240,13 @@ services:
       - GOOGLE_CLIENT_ID="97072811302-e0foheebjj6kto3k8efabljk2t453vbe.apps.googleusercontent.com"
       - GOOGLE_CLIENT_SECRET="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"
       - GOOGLE_REDIRECT_URL=http://localhost:3001/auth/callback
-      - DB_HOST=gx_db_auth
+      - DB_HOST=34.45.100.245
       - DB_PORT=5432
-      - DB_USER=authuser
-      - DB_PASSWORD=authpass
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres123
       - DB_NAME=authdb
       - DB_SSL_MODE=disable
       - FrontendURL=http://localhost:3001
-    depends_on:
-      gx_db_auth:
-        condition: service_healthy
-    restart: always
-    networks:
-      - private-network  # Red privada protegida
-
-  # Base de datos PostgreSQL para autenticación
-  gx_db_auth:
-    image: postgres:16
-    container_name: gx_db_auth
-    environment:
-      POSTGRES_DB: authdb
-      POSTGRES_USER: authuser
-      POSTGRES_PASSWORD: authpass
-      PGDATA: /var/lib/postgresql/data/pgdata
-    expose:
-      - "5432"
-    volumes:
-      - auth_db_data:/var/lib/postgresql/data
-      - ./components/component-4/migrations:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U authuser -d authdb"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    restart: always
-    networks:
-      - private-network  # Red privada protegida
-
-
-
-  # =============== MICROSERVICIO PROFESORES Y ASIGNATURAS (Component-2-1) ===============
-  component-2-1:
-    build:
-      context: ./components/component-2-1
-      dockerfile: Dockerfile
-    image: component-2-1:latest
-    container_name: gx_be_proasig
-    expose:
-      - "8080"
-    environment:
-      SPRING_DATA_MONGODB_URI: mongodb://mongo-professors:27017/profesores_db
-      SPRING_GRAPHQL_SCHEMA_LOCATION: classpath:/graphql/
-    depends_on:
-      - mongo-professors
-    restart: always
-    networks:
-      - private-network  # Red privada protegida
-
-  # MongoDB para profesores y asignaturas
-  mongo-professors:
-    image: mongo:6.0
-    container_name: gx_db_proasig
-    expose:
-      - "27017"
-    volumes:
-      - mongo_professors_data:/data/db
-    restart: always
-    networks:
-      - private-network  # Red privada protegida
-
-  # =============== MICROSERVICIO DE CALIFICACIONES (Component-2-2) ===============
-  component-2-2:
-    build:
-      context: ./components/component-2-2
-      dockerfile: Dockerfile
-    image: component-2-2:latest
-    container_name: gx_be_calif
-    expose:
-      - "8080"
-    environment:
-      SPRING_DATA_MONGODB_URI: mongodb://mongo-grades:27017/calificaciones_db
-      SPRING_GRAPHQL_SCHEMA_LOCATION: classpath:/graphql/
-    depends_on:
-      - mongo-grades
-    restart: always
-    networks:
-      - private-network  # Red privada protegida
-
-  # MongoDB para calificaciones
-  mongo-grades:
-    image: mongo:6.0
-    container_name: gx_db_calif
-    expose:
-      - "27017"
-    volumes:
-      - mongo_grades_data:/data/db
     restart: always
     networks:
       - private-network  # Red privada protegida
