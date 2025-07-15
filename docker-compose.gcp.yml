@@ -154,10 +154,10 @@ services:
     expose:
       - "8000"
     environment:
-      - DB_HOST=35.247.249.84
+      - DB_HOST=35.232.229.161
       - DB_NAME=sia_colegios
-      - DB_USER=sia_user
-      - DB_PASSWORD=sia_password
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres123
       - DB_PORT=5432
       - LOAD_INITIAL_DATA=true
     command: ["django"]
@@ -188,7 +188,7 @@ services:
     expose:
       - "8080"
     environment:
-      - SPRING_DATA_MONGODB_URI=mongodb+srv://crinconro:PPvDSjHZerwFLowi@gradex-cluster.rea5kug.mongodb.net/profesores_db?retryWrites=true&w=majority&appName=gradex-cluster
+      - SPRING_DATA_MONGODB_URI=mongodb://34.61.138.228:27017/profesores_db
       - SPRING_GRAPHQL_SCHEMA_LOCATION=classpath:/graphql/
     depends_on: []
       # - mongo-professors
@@ -216,7 +216,7 @@ services:
     expose:
       - "8080"
     environment:
-      - SPRING_DATA_MONGODB_URI=mongodb+srv://crinconro:PPvDSjHZerwFLowi@gradex-cluster.rea5kug.mongodb.net/calificaciones_db?retryWrites=true&w=majority&appName=gradex-cluster
+      - SPRING_DATA_MONGODB_URI=mongodb://34.56.58.46:27017/calificaciones_db
       - SPRING_GRAPHQL_SCHEMA_LOCATION=classpath:/graphql/
     depends_on: []
       # - mongo-grades
@@ -240,11 +240,11 @@ services:
       - GOOGLE_CLIENT_ID="97072811302-e0foheebjj6kto3k8efabljk2t453vbe.apps.googleusercontent.com"
       - GOOGLE_CLIENT_SECRET="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"
       - GOOGLE_REDIRECT_URL=http://localhost:3001/auth/callback
-      - DB_HOST=35.247.229.4
-      - DB_NAME=authdb
-      - DB_USER=auth_user
-      - DB_PASSWORD=auth_password
+      - DB_HOST=34.45.100.245
       - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres123
+      - DB_NAME=authdb
       - DB_SSL_MODE=disable
       - FrontendURL=http://localhost:3001
     restart: always
