@@ -151,16 +151,16 @@ services:
       dockerfile: Dockerfile
     image: component-1:latest
     container_name: gx_be_estcur
-    expose:
-      - "8000"
+    ports:
+      - "8000:8000"
     environment:
-      - DB_HOST=35.232.229.161
+      - DB_HOST=35.196.8.128
       - DB_NAME=sia_colegios
       - DB_USER=postgres
       - DB_PASSWORD=postgres123
       - DB_PORT=5432
       - LOAD_INITIAL_DATA=true
-    command: ["django"]
+    command: ["gunicorn"]
     depends_on: []
       # - sia-db
     restart: always
@@ -188,7 +188,7 @@ services:
     expose:
       - "8080"
     environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://34.61.138.228:27017/profesores_db
+      - SPRING_DATA_MONGODB_URI=mongodb://34.138.125.111:27017/profesores_db
       - SPRING_GRAPHQL_SCHEMA_LOCATION=classpath:/graphql/
     depends_on: []
       # - mongo-professors
@@ -216,7 +216,7 @@ services:
     expose:
       - "8080"
     environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://34.56.58.46:27017/calificaciones_db
+      - SPRING_DATA_MONGODB_URI=mongodb://104.196.114.221:27017/calificaciones_db
       - SPRING_GRAPHQL_SCHEMA_LOCATION=classpath:/graphql/
     depends_on: []
       # - mongo-grades
@@ -240,7 +240,7 @@ services:
       - GOOGLE_CLIENT_ID="97072811302-e0foheebjj6kto3k8efabljk2t453vbe.apps.googleusercontent.com"
       - GOOGLE_CLIENT_SECRET="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"
       - GOOGLE_REDIRECT_URL=http://localhost:3001/auth/callback
-      - DB_HOST=34.45.100.245
+      - DB_HOST=34.139.123.92
       - DB_PORT=5432
       - DB_USER=postgres
       - DB_PASSWORD=postgres123
@@ -253,10 +253,6 @@ services:
 
 # Volúmenes para persistencia de datos
 volumes:
-  auth_db_data:
-  mongo_professors_data:
-  mongo_grades_data:
-  sia_db_data:
   rabbitmq_data:
   nginx_proxy_cache:
 

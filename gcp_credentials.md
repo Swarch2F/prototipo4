@@ -5,7 +5,7 @@
 ### 1. **sia-colegios** (SIA Colegios - Estudiantes y Cursos)
 - **Región:** us-central1-f
 - **Versión:** POSTGRES_17
-- **IP pública:** 35.232.229.161
+- **IP pública:** 35.196.8.128
 - **Base de datos:** `sia_colegios`
 - **Usuario:** `postgres`
 - **Contraseña:** `postgres`
@@ -17,7 +17,7 @@
 ### 2. **authdb** (Base de Datos de Autenticación)
 - **Región:** us-central1-f
 - **Versión:** POSTGRES_16
-- **IP pública:** 34.45.100.245
+- **IP pública:** 34.139.123.92
 - **Base de datos:** `authdb`
 - **Usuario:** `authuser`
 - **Contraseña:** `authpass` ← **Coincide con docker-compose**
