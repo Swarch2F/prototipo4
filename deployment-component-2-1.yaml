@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: component-2-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: component-2-1
+  template:
+    metadata:
+      labels:
+        app: component-2-1
+    spec:
+      containers:
+      - name: component-2-1
+        image: component-2-1:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_DATA_MONGODB_URI
+          value: "mongodb://34.138.125.111:27017/profesores_db"
+        - name: SPRING_GRAPHQL_SCHEMA_LOCATION
+          value: "classpath:/graphql/"

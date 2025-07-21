@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: component-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: component-1
+  template:
+    metadata:
+      labels:
+        app: component-1
+    spec:
+      containers:
+      - name: component-1
+        image: component-1:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DB_HOST
+          value: "35.196.8.128"
+        - name: DB_NAME
+          value: "sia_colegios"
+        - name: DB_USER
+          value: "postgres"
+        - name: DB_PASSWORD
+          value: "postgres123"
+        - name: DB_PORT
+          value: "5432"
+        - name: LOAD_INITIAL_DATA
+          value: "true"

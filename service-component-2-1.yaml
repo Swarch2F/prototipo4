@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: component-2-1
+spec:
+  type: ClusterIP
+  selector:
+    app: component-2-1
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

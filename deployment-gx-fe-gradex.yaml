@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gx-fe-gradex
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: gx-fe-gradex
+  template:
+    metadata:
+      labels:
+        app: gx-fe-gradex
+    spec:
+      containers:
+      - name: gx-fe-gradex
+        image: gx_fe_gradex:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NEXT_PUBLIC_API_BASE
+          value: "https://192.168.49.2:31622/graphql"
+        - name: INSTANCE_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name

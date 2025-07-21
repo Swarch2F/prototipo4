@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-proxy
+  template:
+    metadata:
+      labels:
+        app: nginx-proxy
+    spec:
+      containers:
+      - name: nginx-proxy
+        image: gradex-nginx-proxy:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 443
+        volumeMounts:
+        - name: nginx-conf
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.proxy.conf
+        - name: ssl-certificate
+          mountPath: /etc/nginx/ssl
+      volumes:
+      - name: nginx-conf
+        configMap:
+          name: nginx-proxy-conf
+      - name: ssl-certificate
+        secret:
+          secretName: nginx-ssl

@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-balancer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-balancer
+  template:
+    metadata:
+      labels:
+        app: nginx-balancer
+    spec:
+      containers:
+      - name: nginx-balancer
+        image: gradex-nginx-balancer:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 80
+        - containerPort: 443
+        volumeMounts:
+        - name: nginx-balancer-conf
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.balancer.conf
+        - name: ssl-certificate
+          mountPath: /etc/nginx/ssl
+      volumes:
+      - name: nginx-balancer-conf
+        configMap:
+          name: nginx-balancer-conf
+      - name: ssl-certificate
+        secret:
+          secretName: nginx-ssl

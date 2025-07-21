@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: component-4
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: component-4
+  template:
+    metadata:
+      labels:
+        app: component-4
+    spec:
+      containers:
+      - name: component-4
+        image: gx_be_auth:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8082
+        env:
+        - name: PORT
+          value: "8082"
+        - name: JWT_SECRET
+          value: "nbu8dTVEoJ/1pnIaOj+JM+Jrui/jLvtIKmXgGScb1ndzEfBb4GbqIz45gcMdRmb4ptfBNA1+/sCtttvpZPL8Vg"
+        - name: JWT_EXPIRATION
+          value: "3600"
+        - name: GOOGLE_CLIENT_ID
+          value: "97072811302-e0foheebjj6kto3k8efabljk2t453vbe.apps.googleusercontent.com"
+        - name: GOOGLE_CLIENT_SECRET
+          value: "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"
+        - name: GOOGLE_REDIRECT_URL
+          value: "http://localhost:3001/auth/callback"
+        - name: DB_HOST
+          value: "34.139.123.92"
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_USER
+          value: "postgres"
+        - name: DB_PASSWORD
+          value: "postgres123"
+        - name: DB_NAME
+          value: "authdb"
+        - name: DB_SSL_MODE
+          value: "disable"
+        - name: FrontendURL
+          value: "http://localhost:3001"

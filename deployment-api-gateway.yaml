@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+      - name: api-gateway
+        image: api-gateway:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 4000
+        env:
+        - name: GX_BE_PROASIG_URL
+          value: "http://component-2-1:8080/graphql"
+        - name: GX_BE_CALIF_URL
+          value: "http://component-2-2:8080/graphql"
+        - name: GX_SIA_URL
+          value: "http://component-1:8000/api"
+        - name: GX_AUTH_URL
+          value: "http://component-4:8082/api/v1"
+        - name: RABBITMQ_URL
+          value: "amqp://rabbitmq:5672"
+        - name: PORT
+          value: "4000"
+        - name: GX_FE_URL
+          value: "https://localhost"
