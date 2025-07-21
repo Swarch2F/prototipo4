@@ -55,7 +55,7 @@ services:
     environment:
       - NODE_ENV=production
       - INSTANCE_ID=1
-      - NEXT_PUBLIC_API_BASE=https://nginx-proxy:443/graphql
+      - API_BASE=https://34.51.53.221:444/graphql
     depends_on:
       - nginx-proxy
     restart: always
@@ -68,7 +68,7 @@ services:
     environment:
       - NODE_ENV=production
       - INSTANCE_ID=2
-      - NEXT_PUBLIC_API_BASE=https://nginx-proxy:443/graphql
+      - API_BASE=https://34.51.53.221:444/graphql
     depends_on:
       - nginx-proxy
       - gx_fe_gradex_1
@@ -82,7 +82,7 @@ services:
     environment:
       - NODE_ENV=production
       - INSTANCE_ID=3
-      - NEXT_PUBLIC_API_BASE=https://nginx-proxy:443/graphql
+      - API_BASE=https://34.51.53.221:444/graphql
     depends_on:
       - nginx-proxy
       - gx_fe_gradex_1

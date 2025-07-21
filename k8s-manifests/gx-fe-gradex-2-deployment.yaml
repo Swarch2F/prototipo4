@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o k8s-manifests/
+    kompose.version: 1.36.0 (HEAD)
+  labels:
+    io.kompose.service: gx-fe-gradex-2
+  name: gx-fe-gradex-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: gx-fe-gradex-2
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o k8s-manifests/
+        kompose.version: 1.36.0 (HEAD)
+      labels:
+        io.kompose.service: gx-fe-gradex-2
+    spec:
+      containers:
+        - env:
+            - name: INSTANCE_ID
+              value: "2"
+            - name: API_BASE
+              value: https://34.51.53.221:444/graphql
+            - name: NODE_ENV
+              value: production
+          image: northamerica-south1-docker.pkg.dev/gradex-swarch/gradex-repo/gx_fe_gradex:latest
+          name: gx-fe-gradex-2
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+      restartPolicy: Always

@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o k8s-manifests/
+    kompose.version: 1.36.0 (HEAD)
+  labels:
+    io.kompose.service: component-1
+  name: component-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: component-1
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o k8s-manifests/
+        kompose.version: 1.36.0 (HEAD)
+      labels:
+        io.kompose.service: component-1
+    spec:
+      containers:
+        - args:
+            - gunicorn
+          env:
+            - name: DB_HOST
+              value: 35.196.8.128
+            - name: DB_NAME
+              value: sia_colegios
+            - name: DB_PASSWORD
+              value: postgres123
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: postgres
+            - name: LOAD_INITIAL_DATA
+              value: "true"
+          image: northamerica-south1-docker.pkg.dev/gradex-swarch/gradex-repo/component-1:latest
+          name: gx-be-estcur
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+      restartPolicy: Always

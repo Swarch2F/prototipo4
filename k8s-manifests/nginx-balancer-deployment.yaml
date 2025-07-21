@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o k8s-manifests/
+    kompose.version: 1.36.0 (HEAD)
+  labels:
+    io.kompose.service: nginx-balancer
+  name: nginx-balancer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: nginx-balancer
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o k8s-manifests/
+        kompose.version: 1.36.0 (HEAD)
+      labels:
+        io.kompose.service: nginx-balancer
+    spec:
+      containers:
+        - image: northamerica-south1-docker.pkg.dev/gradex-swarch/gradex-repo/gradex-nginx-balancer:latest
+          name: gx-nginx-balancer
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          ports:
+            - containerPort: 80
+              protocol: TCP
+            - containerPort: 443
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /etc/nginx/nginx.conf
+              name: nginx-balancer-cm0
+              readOnly: true
+              subPath: nginx.conf
+            - mountPath: /etc/nginx/ssl/certificate.crt
+              name: nginx-balancer-cm1
+              readOnly: true
+              subPath: certificate.crt
+            - mountPath: /etc/nginx/ssl/private.key
+              name: nginx-balancer-cm2
+              readOnly: true
+              subPath: private.key
+            - mountPath: /etc/nginx/ssl/ca_bundle.crt
+              name: nginx-balancer-cm3
+              readOnly: true
+              subPath: ca_bundle.crt
+            - mountPath: /etc/nginx/ssl/dhparam.pem
+              name: nginx-balancer-cm4
+              readOnly: true
+              subPath: dhparam.pem
+      restartPolicy: Always
+      volumes:
+        - configMap:
+            items:
+              - key: nginx.balancer.conf
+                path: nginx.conf
+            name: nginx-balancer-cm0
+          name: nginx-balancer-cm0
+        - configMap:
+            items:
+              - key: certificate.crt
+                path: certificate.crt
+            name: nginx-balancer-cm1
+          name: nginx-balancer-cm1
+        - configMap:
+            items:
+              - key: private.key
+                path: private.key
+            name: nginx-balancer-cm2
+          name: nginx-balancer-cm2
+        - configMap:
+            items:
+              - key: ca_bundle.crt
+                path: ca_bundle.crt
+            name: nginx-balancer-cm3
+          name: nginx-balancer-cm3
+        - configMap:
+            items:
+              - key: dhparam.pem
+                path: dhparam.pem
+            name: nginx-balancer-cm4
+          name: nginx-balancer-cm4

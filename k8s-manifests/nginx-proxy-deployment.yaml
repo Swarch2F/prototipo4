@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o k8s-manifests/
+    kompose.version: 1.36.0 (HEAD)
+  labels:
+    io.kompose.service: nginx-proxy
+  name: nginx-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: nginx-proxy
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o k8s-manifests/
+        kompose.version: 1.36.0 (HEAD)
+      labels:
+        io.kompose.service: nginx-proxy
+    spec:
+      containers:
+        - image: northamerica-south1-docker.pkg.dev/gradex-swarch/gradex-repo/gradex-nginx-proxy:latest
+          name: gx-nginx-proxy
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          ports:
+            - containerPort: 443
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /etc/nginx/nginx.conf
+              name: nginx-proxy-cm0
+              readOnly: true
+              subPath: nginx.conf
+            - mountPath: /etc/nginx/ssl/certificate.crt
+              name: nginx-proxy-cm1
+              readOnly: true
+              subPath: certificate.crt
+            - mountPath: /etc/nginx/ssl/private.key
+              name: nginx-proxy-cm2
+              readOnly: true
+              subPath: private.key
+            - mountPath: /etc/nginx/ssl/ca_bundle.crt
+              name: nginx-proxy-cm3
+              readOnly: true
+              subPath: ca_bundle.crt
+            - mountPath: /etc/nginx/ssl/dhparam.pem
+              name: nginx-proxy-cm4
+              readOnly: true
+              subPath: dhparam.pem
+            - mountPath: /var/cache/nginx
+              name: nginx-proxy-cache
+      restartPolicy: Always
+      volumes:
+        - configMap:
+            items:
+              - key: nginx.proxy.conf
+                path: nginx.conf
+            name: nginx-proxy-cm0
+          name: nginx-proxy-cm0
+        - configMap:
+            items:
+              - key: certificate.crt
+                path: certificate.crt
+            name: nginx-proxy-cm1
+          name: nginx-proxy-cm1
+        - configMap:
+            items:
+              - key: private.key
+                path: private.key
+            name: nginx-proxy-cm2
+          name: nginx-proxy-cm2
+        - configMap:
+            items:
+              - key: ca_bundle.crt
+                path: ca_bundle.crt
+            name: nginx-proxy-cm3
+          name: nginx-proxy-cm3
+        - configMap:
+            items:
+              - key: dhparam.pem
+                path: dhparam.pem
+            name: nginx-proxy-cm4
+          name: nginx-proxy-cm4
+        - name: nginx-proxy-cache
+          persistentVolumeClaim:
+            claimName: nginx-proxy-cache

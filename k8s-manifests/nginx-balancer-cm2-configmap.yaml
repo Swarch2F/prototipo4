@@ -1,0 +1,37 @@
+apiVersion: v1
+data:
+  private.key: |
+    -----BEGIN RSA PRIVATE KEY-----
+    MIIEpQIBAAKCAQEAjvkMDVw3vTFWkl8o7Tl+31qDOxAvn6Ms6yG6B0Dz39dtG4Uc
+    4mXKD03DekOP9ITHbna6QYsUVp6uGsqqsQJxcHz4kRHFI5tRypYGIzv1gt0sqe+a
+    6qwFODVs72CSCIurlsy312FGermC7usdYTsAU+0MCPNVaqYXqhwTDvOBTZPPFmJe
+    YFIa/G87W7lJxzNkLMhb4VAbwrRUBoJ3OmTOkacgQRB7qUg+nXSOuxEavIHZRNij
+    1+Cp4l9osAttkGh/QAefi6SVRIf+BXvhFQepIPS4qmMBCiUl+kzQ8p5g+DZHocd5
+    gA4FT8hBfT7eCJTkFvnEx2sueP0o9HG3P9GWQwIDAQABAoIBAFEP97tje97zKGiZ
+    N7U5EixFP36vcLEMbZ1rY/RU6XESzbP6xyO+HtCKgLjDsc0rs394Jaaf2oo6MfDS
+    0/DEt9jVooFuF95WZAt/AD/d8Refm4FGbwl7OwJhmEAo+uOJfWJk9B9T8ggHQqt/
+    9wp3z3nGPzqb7OQpA+XZQR0LB1caC/voR3Zl3hYiMWkmQYekvNmNp5/JlqrGYX1I
+    hUk1Jm4Hv3nUiFSit9tXMBPRTt7CYH1qvRVcXzwvvzxKcxos5PAS6Ah2QcmyVpPJ
+    X5BS60LQVaCemhE6nbi690LprBVjpHqKa6wvX+mLrQiZqZcUICx1IB0z+03osYE3
+    dVwK2EECgYEAx9MAE3K/PiM13rPzyhIfezzvrX8hloavxINJBAv3VyJkeW1STt8g
+    VLNBh63aWnFVPUTC1yhE529d/ocmctfQtIAuWhwX8nbN5pUAtX9oQepsoeiAi0dW
+    +ZR5m1u1UddpghCNN5qvBiZUb8MOwEnKZ/E5p6j/pVVslhItgyNvKzECgYEAtyqN
+    aVjuM0i/1ZWZakgcktDvx8u7+PY0yQdIQihVk4WYSqJ/JhI9ixnlIAaoyAl3p6wt
+    JslBQUf0Av8CKt/V5mk1G4Y9ynI0uQZbCsdcjOL6gbQQDMsxK0Izm3VdqfSVwMxq
+    e4B10+5NURWs+uuvVOolt1TDhl6+3IiA3lcN07MCgYEAkQxkvblJgP1mGSZfDItj
+    Nr3g7PufkfhqlicGVV2qSSG59TqZyI7GlTUZmDdmjMg/q53CIRQmECkS/bN1AWAP
+    KzbwbpB+AY6jn4EBZr35G//ioxR2WqOKStiv/UnwsFvBRpxlJbuu2LPyDr50crgd
+    qJ290CooiAceL0E6sDqEc8ECgYEAl9SRFfNeuGokgnKYki4maVkCehaawXutM7py
+    nkx662dBXxSl2zQhic20TUDX5cFbS0UAxHbtPaTcUyN5c3rJ/03UdPVpAQh8RadM
+    DnpFcI+x4ZQV/dTs9BPTXZkDRB93hzKrTaalhUCzHHSgR/rYAsZ47yg3T4n4IiyQ
+    zj1RO9sCgYEAxU0w3TcoFRDsS2nwRaoM86pXq1AOH1XznntjW8si1ewI4YKklyhn
+    JGHa/UlX57mHBD+WqJFOS27LO2o9e5KHqE9cJcYUfwrDfXoEr1BYrIG6gQL7eDuu
+    uHUWB746n635vyNFAvGr2uaIp4+5Uj0kaBTmdUXaEgtP82VVY3fsqus=
+    -----END RSA PRIVATE KEY-----
+kind: ConfigMap
+metadata:
+  annotations:
+    use-subpath: "true"
+  labels:
+    io.kompose.service: nginx-balancer
+  name: nginx-balancer-cm2

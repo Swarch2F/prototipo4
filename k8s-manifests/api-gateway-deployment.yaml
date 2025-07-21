@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o k8s-manifests/
+    kompose.version: 1.36.0 (HEAD)
+  labels:
+    io.kompose.service: api-gateway
+  name: api-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: api-gateway
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o k8s-manifests/
+        kompose.version: 1.36.0 (HEAD)
+      labels:
+        io.kompose.service: api-gateway
+    spec:
+      containers:
+        - env:
+            - name: GX_AUTH_URL
+              value: http://component-4:8082/api/v1
+            - name: GX_BE_CALIF_URL
+              value: http://component-2-2:8080/graphql
+            - name: GX_BE_PROASIG_URL
+              value: http://component-2-1:8080/graphql
+            - name: GX_FE_URL
+              value: https://nginx-balancer
+            - name: GX_SIA_URL
+              value: http://component-1:8000/api
+            - name: PORT
+              value: "4000"
+            - name: RABBITMQ_URL
+              value: amqp://rabbitmq:5672
+          image: northamerica-south1-docker.pkg.dev/gradex-swarch/gradex-repo/api-gateway:latest
+          name: gx-api-gateway
+          ports:
+            - containerPort: 4000
+              protocol: TCP
+      restartPolicy: Always
