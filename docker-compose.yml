@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   # =============== NGINX BALANCEADOR DE CARGA (PÚBLICO, SOLO FRONTEND) ===============
@@ -22,8 +22,6 @@ services:
       - gx_fe_gradex_2
       - gx_fe_gradex_3
     restart: always
-    networks:
-      - public-network
 
   # =============== NGINX PROXY INVERSO PARA API GATEWAY (PÚBLICO Y PRIVADO, SOLO /graphql) ===============
   nginx-proxy:
@@ -44,9 +42,6 @@ services:
     depends_on:
       - api-gateway
     restart: always
-    networks:
-      - public-network
-      - private-network
 
   # =============== FRONTEND (3 INSTANCIAS, RED PÚBLICA) ===============
   gx_fe_gradex_1:
@@ -58,13 +53,12 @@ services:
     expose:
       - "3000"
     environment:
-      - API_URL=https://localhost:444/graphql
+      - NODE_ENV=production
       - INSTANCE_ID=1
+      - NEXT_PUBLIC_API_BASE=https://nginx-proxy:443/graphql
     depends_on:
       - nginx-proxy
     restart: always
-    networks:
-      - public-network
 
   gx_fe_gradex_2:
     image: gx_fe_gradex:latest
@@ -72,14 +66,13 @@ services:
     expose:
       - "3000"
     environment:
-      - API_URL=https://localhost:444/graphql
+      - NODE_ENV=production
       - INSTANCE_ID=2
+      - NEXT_PUBLIC_API_BASE=https://nginx-proxy:443/graphql
     depends_on:
       - nginx-proxy
       - gx_fe_gradex_1
     restart: always
-    networks:
-      - public-network
 
   gx_fe_gradex_3:
     image: gx_fe_gradex:latest
@@ -87,14 +80,13 @@ services:
     expose:
       - "3000"
     environment:
-      - API_URL=https://localhost:444/graphql
+      - NODE_ENV=production
       - INSTANCE_ID=3
+      - NEXT_PUBLIC_API_BASE=https://nginx-proxy:443/graphql
     depends_on:
       - nginx-proxy
       - gx_fe_gradex_1
     restart: always
-    networks:
-      - public-network
 
   # =============== API GATEWAY (SOLO RED PRIVADA) ===============
   api-gateway:
@@ -112,7 +104,7 @@ services:
       - GX_AUTH_URL=http://component-4:8082/api/v1
       - RABBITMQ_URL=amqp://rabbitmq:5672
       - PORT=4000
-      - GX_FE_URL=https://localhost
+      - GX_FE_URL=https://nginx-balancer
     depends_on:
       - component-1
       - component-2-1
@@ -120,8 +112,6 @@ services:
       - component-4
       - rabbitmq
     restart: always
-    networks:
-      - private-network
 
   # =============== RABBITMQ ===============
   rabbitmq:
@@ -141,8 +131,6 @@ services:
       timeout: 3s
       retries: 5
     restart: always
-    networks:
-      - private-network  # Red privada protegida
 
   # =============== MICROSERVICIO SIA COLEGIOS (Component-1) ===============
   component-1:
@@ -151,8 +139,8 @@ services:
       dockerfile: Dockerfile
     image: component-1:latest
     container_name: gx_be_estcur
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     environment:
       - DB_HOST=35.196.8.128
       - DB_NAME=sia_colegios
@@ -164,8 +152,6 @@ services:
     depends_on: []
       # - sia-db
     restart: always
-    networks:
-      - private-network  # Red privada protegida
 
   # Eliminar servicios de bases de datos locales y sus dependencias
   # sia-db:
@@ -193,8 +179,6 @@ services:
     depends_on: []
       # - mongo-professors
     restart: always
-    networks:
-      - private-network  # Red privada protegida
 
   # Eliminar servicios de bases de datos locales y sus dependencias
   # sia-db:
@@ -221,8 +205,6 @@ services:
     depends_on: []
       # - mongo-grades
     restart: always
-    networks:
-      - private-network  # Red privada protegida
 
   # =============== MICROSERVICIO DE AUTENTICACIÓN (Component-4) ===============
   component-4:
@@ -239,38 +221,17 @@ services:
       - JWT_EXPIRATION=3600 # 1 hora
       - GOOGLE_CLIENT_ID="97072811302-e0foheebjj6kto3k8efabljk2t453vbe.apps.googleusercontent.com"
       - GOOGLE_CLIENT_SECRET="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"
-      - GOOGLE_REDIRECT_URL=http://localhost:3001/auth/callback
+      - GOOGLE_REDIRECT_URL=https://nginx-balancer/auth/callback
       - DB_HOST=34.139.123.92
       - DB_PORT=5432
       - DB_USER=postgres
       - DB_PASSWORD=postgres123
       - DB_NAME=authdb
       - DB_SSL_MODE=disable
-      - FrontendURL=http://localhost:3001
+      - FrontendURL=https://nginx-balancer
     restart: always
-    networks:
-      - private-network  # Red privada protegida
 
 # Volúmenes para persistencia de datos
 volumes:
   rabbitmq_data:
   nginx_proxy_cache:
-
-# =============== SEGMENTACIÓN DE RED PARA SEGURIDAD ===============
-networks:
-  # Red pública - Solo nginx proxy tiene acceso externo
-  public-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
-    # Acceso desde el exterior únicamente a través del proxy
-    
-  # Red privada - Todos los microservicios y bases de datos
-  private-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.21.0.0/16
-    internal: false  # Permitir salida a internet para updates/dependencias
-    # Solo nginx proxy puede acceder desde el exterior
