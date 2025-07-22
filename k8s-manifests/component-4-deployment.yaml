@@ -23,7 +23,7 @@ spec:
       containers:
         - env:
             - name: DB_HOST
-              value: 34.139.123.92
+              value: 34.51.32.217
             - name: DB_NAME
               value: authdb
             - name: DB_PASSWORD

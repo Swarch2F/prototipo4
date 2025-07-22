@@ -25,7 +25,7 @@ spec:
             - gunicorn
           env:
             - name: DB_HOST
-              value: 35.196.8.128
+              value: 34.51.73.77
             - name: DB_NAME
               value: sia_colegios
             - name: DB_PASSWORD
