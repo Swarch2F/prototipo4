@@ -142,7 +142,7 @@ services:
     expose:
       - "8000"
     environment:
-      - DB_HOST=35.196.8.128
+      - DB_HOST=34.51.73.77
       - DB_NAME=sia_colegios
       - DB_USER=postgres
       - DB_PASSWORD=postgres123
@@ -222,7 +222,7 @@ services:
       - GOOGLE_CLIENT_ID="97072811302-e0foheebjj6kto3k8efabljk2t453vbe.apps.googleusercontent.com"
       - GOOGLE_CLIENT_SECRET="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"
       - GOOGLE_REDIRECT_URL=https://nginx-balancer/auth/callback
-      - DB_HOST=34.139.123.92
+      - DB_HOST=34.51.32.217
       - DB_PORT=5432
       - DB_USER=postgres
       - DB_PASSWORD=postgres123
