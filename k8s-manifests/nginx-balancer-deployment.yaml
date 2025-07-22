@@ -1,30 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    kompose.cmd: kompose convert -o k8s-manifests/
-    kompose.version: 1.36.0 (HEAD)
-  labels:
-    io.kompose.service: nginx-balancer
   name: nginx-balancer
+  labels:
+    app: nginx-balancer
 spec:
   replicas: 1
   selector:
     matchLabels:
-      io.kompose.service: nginx-balancer
+      app: nginx-balancer
   strategy:
-    type: Recreate
+    type: RollingUpdate
   template:
     metadata:
-      annotations:
-        kompose.cmd: kompose convert -o k8s-manifests/
-        kompose.version: 1.36.0 (HEAD)
       labels:
-        io.kompose.service: nginx-balancer
+        app: nginx-balancer
     spec:
       containers:
         - image: northamerica-south1-docker.pkg.dev/gradex-swarch/gradex-repo/gradex-nginx-balancer:latest
           name: gx-nginx-balancer
+          ports:
+            - containerPort: 80
+            - containerPort: 443
           resources:
             requests:
               cpu: 50m
@@ -32,61 +29,30 @@ spec:
             limits:
               cpu: 200m
               memory: 256Mi
-          ports:
-            - containerPort: 80
-              protocol: TCP
-            - containerPort: 443
-              protocol: TCP
+          # --- CAMBIO: Sección de montajes de volumen corregida para ser explícita ---
           volumeMounts:
-            - mountPath: /etc/nginx/nginx.conf
-              name: nginx-balancer-cm0
-              readOnly: true
-              subPath: nginx.conf
-            - mountPath: /etc/nginx/ssl/certificate.crt
-              name: nginx-balancer-cm1
-              readOnly: true
-              subPath: certificate.crt
-            - mountPath: /etc/nginx/ssl/private.key
-              name: nginx-balancer-cm2
-              readOnly: true
-              subPath: private.key
-            - mountPath: /etc/nginx/ssl/ca_bundle.crt
-              name: nginx-balancer-cm3
-              readOnly: true
-              subPath: ca_bundle.crt
-            - mountPath: /etc/nginx/ssl/dhparam.pem
-              name: nginx-balancer-cm4
-              readOnly: true
+            # 1. Monta el archivo de configuración de NGINX desde el ConfigMap.
+            - name: nginx-config-volume
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.balancer.conf
+            # 2. Monta el certificado combinado desde el Secret.
+            - name: ssl-secret-volume
+              mountPath: /etc/nginx/ssl/tls.crt
+              subPath: tls.crt
+            # 3. Monta la clave privada desde el Secret.
+            - name: ssl-secret-volume
+              mountPath: /etc/nginx/ssl/tls.key
+              subPath: tls.key
+            # 4. Monta el archivo dhparam.pem desde el ConfigMap.
+            - name: nginx-config-volume
+              mountPath: /etc/nginx/ssl/dhparam.pem
               subPath: dhparam.pem
       restartPolicy: Always
+      # La sección de volúmenes se mantiene igual, ya que define las fuentes correctamente.
       volumes:
-        - configMap:
-            items:
-              - key: nginx.balancer.conf
-                path: nginx.conf
-            name: nginx-balancer-cm0
-          name: nginx-balancer-cm0
-        - configMap:
-            items:
-              - key: certificate.crt
-                path: certificate.crt
-            name: nginx-balancer-cm1
-          name: nginx-balancer-cm1
-        - configMap:
-            items:
-              - key: private.key
-                path: private.key
-            name: nginx-balancer-cm2
-          name: nginx-balancer-cm2
-        - configMap:
-            items:
-              - key: ca_bundle.crt
-                path: ca_bundle.crt
-            name: nginx-balancer-cm3
-          name: nginx-balancer-cm3
-        - configMap:
-            items:
-              - key: dhparam.pem
-                path: dhparam.pem
-            name: nginx-balancer-cm4
-          name: nginx-balancer-cm4
+        - name: nginx-config-volume
+          configMap:
+            name: nginx-balancer-config
+        - name: ssl-secret-volume
+          secret:
+            secretName: nginx-tls-secret
