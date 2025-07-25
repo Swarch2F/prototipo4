@@ -1,27 +1,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-balancer
+  annotations:
+    kompose.cmd: kompose convert -o k8s-manifests/
+    kompose.version: 1.36.0 (HEAD)
   labels:
-    app: nginx-balancer
+    io.kompose.service: nginx-balancer
+  name: nginx-balancer
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: nginx-balancer
+      io.kompose.service: nginx-balancer
   strategy:
-    type: RollingUpdate
+    type: Recreate
   template:
     metadata:
+      annotations:
+        kompose.cmd: kompose convert -o k8s-manifests/
+        kompose.version: 1.36.0 (HEAD)
       labels:
-        app: nginx-balancer
+        io.kompose.service: nginx-balancer
     spec:
       containers:
         - image: northamerica-south1-docker.pkg.dev/gradex-swarch/gradex-repo/gradex-nginx-balancer:latest
           name: gx-nginx-balancer
-          ports:
-            - containerPort: 80
-            - containerPort: 443
           resources:
             requests:
               cpu: 50m
@@ -29,7 +32,13 @@ spec:
             limits:
               cpu: 200m
               memory: 256Mi
-          # --- CAMBIO: Sección de montajes de volumen corregida para ser explícita ---
+          ports:
+            - containerPort: 80
+              protocol: TCP
+            - containerPort: 443
+              protocol: TCP
+          # --- SECCIÓN CORREGIDA ---
+          # Se reemplaza la sección de montajes por la versión explícita y correcta.
           volumeMounts:
             # 1. Monta el archivo de configuración de NGINX desde el ConfigMap.
             - name: nginx-config-volume
@@ -48,7 +57,8 @@ spec:
               mountPath: /etc/nginx/ssl/dhparam.pem
               subPath: dhparam.pem
       restartPolicy: Always
-      # La sección de volúmenes se mantiene igual, ya que define las fuentes correctamente.
+      # --- SECCIÓN CORREGIDA ---
+      # Se reemplaza la sección de volúmenes por la versión que usa un solo Secret y un solo ConfigMap.
       volumes:
         - name: nginx-config-volume
           configMap:

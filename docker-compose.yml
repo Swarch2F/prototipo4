@@ -1,5 +1,3 @@
-
-
 services:
   # =============== NGINX BALANCEADOR DE CARGA (PÚBLICO, SOLO FRONTEND) ===============
   nginx-balancer:
@@ -21,9 +19,11 @@ services:
       - gx_fe_gradex_1
       - gx_fe_gradex_2
       - gx_fe_gradex_3
+      - api-gateway # Añadimos dependencia para que pueda redirigir
     restart: always
 
   # =============== NGINX PROXY INVERSO PARA API GATEWAY (PÚBLICO Y PRIVADO, SOLO /graphql) ===============
+  # Se mantiene sin cambios para la aplicación de escritorio
   nginx-proxy:
     build:
       context: ./components/nginx
@@ -31,7 +31,7 @@ services:
     image: gradex-nginx-proxy:latest
     container_name: gx_nginx_proxy
     ports:
-      - "444:443" # HTTPS para /graphql (puedes usar otro puerto o dominio)
+      - "444:443"
     volumes:
       - ./components/nginx/nginx.proxy.conf:/etc/nginx/nginx.conf:ro
       - ./components/nginx/ssl/certificate.crt:/etc/nginx/ssl/certificate.crt:ro
@@ -55,7 +55,10 @@ services:
     environment:
       - NODE_ENV=production
       - INSTANCE_ID=1
-      - API_BASE=https://34.51.53.221:444/graphql
+      # --- CORRECCIÓN ---
+      # La API ahora se busca en una ruta relativa al dominio principal.
+      # El frontend llamará a https://gradex.space/graphql
+      - API_BASE=/graphql
     depends_on:
       - nginx-proxy
     restart: always
@@ -68,7 +71,8 @@ services:
     environment:
       - NODE_ENV=production
       - INSTANCE_ID=2
-      - API_BASE=https://34.51.53.221:444/graphql
+      # --- CORRECCIÓN ---
+      - API_BASE=/graphql
     depends_on:
       - nginx-proxy
       - gx_fe_gradex_1
@@ -82,12 +86,12 @@ services:
     environment:
       - NODE_ENV=production
       - INSTANCE_ID=3
-      - API_BASE=https://34.51.53.221:444/graphql
+      # --- CORRECCIÓN ---
+      - API_BASE=/graphql
     depends_on:
       - nginx-proxy
       - gx_fe_gradex_1
     restart: always
-
   # =============== API GATEWAY (SOLO RED PRIVADA) ===============
   api-gateway:
     build:

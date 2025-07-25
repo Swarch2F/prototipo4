@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: component-4-standby
+  labels:
+    io.kompose.service: component-4
+    role: standby
+spec:
+  replicas: 0 # Empieza dormido
+  selector:
+    matchLabels:
+      io.kompose.service: component-4
+      role: standby
+  template:
+    metadata:
+      labels:
+        io.kompose.service: component-4
+        role: standby
+    spec:
+      containers:
+        - name: gx-be-auth
+          image: northamerica-south1-docker.pkg.dev/gradex-swarch/gradex-repo/gx_be_auth:latest
+          ports:
+            - containerPort: 8082
+              protocol: TCP
+          env:
+            - name: DB_HOST
+              value: 34.51.32.217
+            - name: DB_NAME
+              value: authdb
+            - name: DB_PASSWORD
+              value: postgres123
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_SSL_MODE
+              value: disable
+            - name: DB_USER
+              value: postgres
+            - name: FrontendURL
+              value: https://nginx-balancer
+            - name: GOOGLE_CLIENT_ID
+              value: "97072811302-e0foheebjj6kto3k8efabljk2t453vbe.apps.googleusercontent.com"
+            - name: GOOGLE_CLIENT_SECRET
+              value: "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"
+            - name: GOOGLE_REDIRECT_URL
+              value: https://nginx-balancer/auth/callback
+            - name: JWT_EXPIRATION
+              value: "3600"
+            - name: JWT_SECRET
+              value: "nbu8dTVEoJ/1pnIaOj+JM+Jrui/jLvtIKmXgGScb1ndzEfBb4GbqIz45gcMdRmb4ptfBNA1+/sCtttvpZPL8Vg"
+            - name: PORT
+              value: "8082"
+      restartPolicy: Always

@@ -25,7 +25,7 @@ spec:
             - name: INSTANCE_ID
               value: "3"
             - name: API_BASE
-              value: https://34.51.53.221:444/graphql
+              value: /graphql
             - name: NODE_ENV
               value: production
           image: northamerica-south1-docker.pkg.dev/gradex-swarch/gradex-repo/gx_fe_gradex:latest

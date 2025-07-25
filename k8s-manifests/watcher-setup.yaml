@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: deployment-watcher-sa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: deployment-watcher-role
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch", "patch", "update"]
+- apiGroups: ["apps"]
+  resources: ["deployments/scale"] # <--- LA LÍNEA CLAVE QUE FALTABA
+  verbs: ["patch", "update"]       # <--- LOS PERMISOS PARA ESA LÍNEA
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: deployment-watcher-binding
+subjects:
+- kind: ServiceAccount
+  name: deployment-watcher-sa
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: deployment-watcher-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-watcher
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: deployment-watcher
+  template:
+    metadata:
+      labels:
+        app: deployment-watcher
+    spec:
+      serviceAccountName: deployment-watcher-sa
+      containers:
+      - name: kubectl-watcher
+        image: bitnami/kubectl:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            echo "Iniciando vigilancia v2...";
+            PRIMARY_DEPLOYMENT_NAME="component-4-primary";
+            STANDBY_DEPLOYMENT_NAME="component-4-standby";
+            while true; do
+              if ! kubectl get deployment ${PRIMARY_DEPLOYMENT_NAME} >/dev/null 2>&1; then
+                echo "¡FALLO DETECTADO! Deployment '${PRIMARY_DEPLOYMENT_NAME}' no existe.";
+                echo "Activando el deployment de respaldo: ${STANDBY_DEPLOYMENT_NAME}";
+                kubectl scale deployment ${STANDBY_DEPLOYMENT_NAME} --replicas=1;
+                if [ $? -eq 0 ]; then
+                  echo "Respaldo activado. Terminando vigilancia.";
+                  break;
+                else
+                  echo "Error al intentar activar el respaldo. Reintentando...";
+                fi
+              else
+                READY_REPLICAS=$(kubectl get deployment ${PRIMARY_DEPLOYMENT_NAME} -o jsonpath='{.status.readyReplicas}');
+                echo "Deployment primario existe. Réplicas listas: ${READY_REPLICAS:-0}";
+              fi;
+              sleep 15;
+            done;
