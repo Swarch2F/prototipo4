@@ -1,4 +1,4 @@
-# GRADEX - Prototipo 3
+# GRADEX - Prototipo 4
 
 
 
@@ -28,7 +28,8 @@
 
 ### Component-and Connector (C&C) Structure
 
-![Copy of Diagrama C C](https://github.com/user-attachments/assets/f30b778b-27ed-40d6-999a-5e5e165c3197)
+<img width="3003" height="4365" alt="Copy of Diagrama C C" src="https://github.com/user-attachments/assets/75287990-101d-458a-b350-d7b90543bc58" />
+
 
 
 #### **Description of architectural styles and patterns used**
@@ -116,6 +117,8 @@ El sistema presenta una separación clara entre el cliente (frontend) y los serv
 * Tecnología: Go
 
 * Función: Autenticación y emisión de JWT
+  
+* Replicación pasiva: Tiene una segunda instancia exactamente igual a la primera que se activa, cuando la primera falla.
 
 * DB: PostgreSQL (`GX_DB_Auth`) vía lib pgx.
 
@@ -167,7 +170,8 @@ El sistema presenta una separación clara entre el cliente (frontend) y los serv
 
 ### Layered Structure
 #### Layered View:
-![cesar Copia de Copy of Diagrama C C](https://github.com/user-attachments/assets/5fc98764-773c-499a-a50d-9eeafc757116)
+<img width="4169" height="5160" alt="cesar Copia de Copy of Diagrama C C" src="https://github.com/user-attachments/assets/34f87f8e-ac37-4ec5-877b-3659f7776c37" />
+
 
 **La arquitectura de GradeX está organizada en cinco capas claramente definidas que separan responsabilidades, maximizan la escalabilidad y facilitan el mantenimiento del sistema. A continuación, se describen cada una de ellas.**
 
@@ -280,7 +284,8 @@ El sistema presenta una separación clara entre el cliente (frontend) y los serv
 ### Deployment Structure
 #### Deployment View
 
-![Copy of Diagrama de Despliegue](https://github.com/user-attachments/assets/d1159354-c255-487b-a1c1-e49460d87460)
+<img width="4670" height="2530" alt="Blank board" src="https://github.com/user-attachments/assets/586c881f-b6fa-4a82-8d05-ba58ff1aed5b" />
+
 
 **Este sistema está compuesto por múltiples microservicios y componentes backend que se ejecutan dentro de una red privada Docker, expuestos mediante NGINX y balanceadores, y un cliente de escritorio desarrollado con Electron.js, que opera desde el equipo del usuario. Los servicios se comunican usando HTTP, AMQP o TCP/IP según su función.** 
 
@@ -511,20 +516,125 @@ A continuación, se describen las tácticas y técnicas implementadas para abord
 * **Cache-Aside Pattern** (también llamado Lazy Loading) es un patrón de rendimiento que mejora la escalabilidad al almacenar temporalmente datos frecuentemente consultados en una capa de caché rápida. Cuando el sistema recibe una solicitud, primero verifica si los datos están en caché; si no existen o están expirados, los consulta de la base de datos principal, los almacena en caché y luego los devuelve. Esto acelera los tiempos de respuesta para consultas repetitivas. **MImprove Efficiency**
 
 #### Performance testing analysis and results
-![WhatsApp Image 2025-07-07 at 11 49 05 PM](https://github.com/user-attachments/assets/7f31cb7a-96fe-4eae-9d1f-3ae916bfa2ac)
+<img width="869" height="291" alt="image" src="https://github.com/user-attachments/assets/8c73175b-8054-49e6-a8c6-81dc48215154" />
+
 
 <br>
 
-![WhatsApp Image 2025-07-07 at 11 48 02 PM](https://github.com/user-attachments/assets/c41077dc-d797-4774-bbf0-22e1d59f6d23)
+<img width="682" height="570" alt="image" src="https://github.com/user-attachments/assets/5b007a07-645b-4f74-b1fd-c054539315fb" />
+
+####  Descripción general
+
+Estas pruebas evalúan el rendimiento de nuestro proyecto bajo carga de usuarios concurrentes, considerando dos escenarios distintos:
+
+- **Escenario #1:** Sin aplicar el patrón de Redundancia Pasiva.
+- **Escenario #2:** Con el patrón de Redundancia Pasiva (orientado a la confiabilidad del sistema, más que al rendimiento).
+
+Aunque el patrón de redundancia busca mejorar la disponibilidad y tolerancia a fallos, también tiene un impacto positivo en el rendimiento del sistema.
+
+
+
+#### Análisis de la gráfica (Curva de rodilla)
+
+El tiempo de respuesta (en ms) aumenta conforme crece el número de usuarios concurrentes:
+
+- Hasta **50 usuarios**, ambos escenarios se comportan de forma similar con diferencias mínimas.
+- A partir de **200 usuarios**, el tiempo de respuesta comienza a incrementarse más rápidamente.
+- Se identifica una **curva de rodilla clara alrededor de los 500 usuarios**, donde el rendimiento se degrada de forma más notoria.
+
+Este punto marca el límite a partir del cual el sistema deja de escalar eficientemente.
+
+
+#### Comparación de resultados
+
+#### Escenario #1 (Sin Redundancia)
+| Usuarios | Tiempo de Respuesta (ms) | Throughput (trans/min) |
+|----------|---------------------------|--------------------------|
+| 1        | 288,33                    | 46,6                     |
+| 5        | 289,33                    | 232,7                    |
+| 50       | 521                       | 1972,4                   |
+| 200      | 1541                      | 4722,6                   |
+| 500      | 3220,67                   | 7107,9                   |
+| 1000     | 5468,33                   | 9276,0                   |
+
+#### Escenario #2 (Con Redundancia)
+| Usuarios | Tiempo de Respuesta (ms) | Throughput (trans/min) |
+|----------|---------------------------|--------------------------|
+| 1        | 292,33                    | 46,4                     |
+| 5        | 170                       | 256,4                    |
+| 50       | 484,33                    | 2021,1                   |
+| 200      | 1460                      | 4878,0                   |
+| 500      | 2749,33                   | 8001,4                   |
+| 1000     | 4075                      | 11822,7                  |
+
+
+####  Observaciones
+
+- **El Escenario #2 supera ligeramente al Escenario #1** tanto en tiempo de respuesta como en throughput, especialmente con mayor carga.
+- El **patrón de Redundancia Pasiva no penaliza el rendimiento**, y en muchos casos lo mejora.
+- La **curva de rodilla se presenta cerca de los 500 usuarios**, lo que indica el límite óptimo de carga antes de una degradación severa.
+
+
+
+####  Conclusiones
+
+- **El Escenario #2** (con redundancia) es más adecuado para producción gracias a:
+  - Mayor throughput bajo carga.
+  - Tiempos de respuesta iguales o menores.
+  - Mejora en la confiabilidad del sistema.
+
+
+
+### Reliability
+
+#### Reliability (high availability, resilience or fault tolerance) scenarios.
+
+![Escenarios Seguridad y rendimiento - Replication Pattern ](https://github.com/user-attachments/assets/cee1d16e-8a5a-4c80-bef8-925f505901c6)
+
+<br>
+
+![Escenarios Seguridad y rendimiento - Service Discovery Pattern](https://github.com/user-attachments/assets/0b77b919-f5c7-46b9-afac-52108c9e474a)
+
+<br>
+
+![Escenarios Seguridad y rendimiento - Cluster Pattern](https://github.com/user-attachments/assets/b97d32d0-aae6-4275-9237-cb87f9c3ac1f)
+
+<br>
+
+![Escenarios Seguridad y rendimiento - Passive Replication Pattern](https://github.com/user-attachments/assets/29cf2c21-0501-4bfc-95c8-f4f92cdf9181)
+
+
+#### Applied architectural tactics
+
+*Redundant Spare*: Esta táctica mantiene componentes de respaldo listos para activarse ante fallos en los elementos principales. En GRADEX, se implementa con instancias pasivas (como en el servicio de autenticación) que permanecen sincronizadas y toman el control inmediatamente cuando el sistema detecta una falla. Esto garantiza continuidad del servicio sin intervención manual, ideal para módulos críticos donde la disponibilidad es prioritaria.
+
+*Reconfiguration*: Esta táctica permite al sistema modificar dinámicamente su estructura o parámetros operativos para adaptarse a fallos, cambios de carga o mantenimiento planificado. En GRADEX, se manifiesta mediante el rebalanceo automático de tráfico al detectar nodos caídos, el ajuste de políticas de reintento para conexiones a bases de datos, o la redistribución de pods en GKE durante actualizaciones. A diferencia de simplemente activar repuestos, esta táctica implica inteligencia operativa para reajustar el sistema en tiempo real, optimizando recursos existentes mientras se mantienen los SLA de disponibilidad y rendimiento.
+
+
+#### Applied architectural patterns
+
+*Replication Pattern*: Este patrón mejora la confiabilidad mediante la duplicación de instancias de servicios o datos en múltiples nodos. En GRADEX, se aplica al frontend y servicios críticos, permitiendo que el sistema continúe operando incluso si falla una instancia, ya que las solicitudes se redirigen automáticamente a las réplicas disponibles. Esto garantiza alta disponibilidad y tolerancia a fallos durante picos de tráfico o actualizaciones.
+
+*Cluster Pattern*: Organiza los servicios en un grupo de nodos (cluster) gestionado por Kubernetes (GKE), donde los recursos se distribuyen y escalan automáticamente. En GRADEX, este patrón asegura que los microservicios (como autenticación o gestión de cursos) se reinicien o reubiquen en nodos sanos ante fallos, manteniendo la operación continua sin intervención manual.
+
+*Passive Replication Pattern*: Mantiene una instancia secundaria en espera ("passive") para servicios críticos (ej: autenticación). En GRADEX, si la instancia principal falla, el sistema activa la réplica sincronizada, minimizando el tiempo de inactividad. Ideal para componentes donde la consistencia de datos es prioritaria, como el módulo de calificaciones.
+
+*Service Discovery Pattern*: En entornos dinámicos como GKE, este patrón permite que los servicios se localicen y comuniquen entre sí automáticamente, incluso al escalar o reemplazar instancias. GRADEX lo usa para gestionar la conexión entre frontend y backends, asegurando que las solicitudes siempre encuentren los endpoints correctos sin configuraciones estáticas.
+
+
+### Interoperability 
+
+![Escenarios Seguridad y rendimiento - Interoperabilidad ](https://github.com/user-attachments/assets/5560e302-ad39-4e25-90f6-edf61a90e1c9)
 
 
 
 ## 5. Repositorio del proyecto
-
-Para utilizar el proyecto simplemente clona el repositorio principal, el cual ya incluye todos los submódulos necesarios:
+* Puede acceder al proyecto por medio de: https://gradex.space
+* Para descargar la aplicacion de escritorio, puedes descargarlo de: https://drive.google.com/drive/folders/1sZOGRAUARZDUAfDL4Kh2wrnzubOO6FbK?usp=sharing
+* Para utilizar el proyecto localmente simplemente clona el repositorio principal, el cual ya incluye todos los submódulos necesarios:
 
 ```bash
-git clone --recursive https://github.com/Swarch2F/prototipo3.git
+git clone --recursive https://github.com/Swarch2F/prototipo4.git
 cd prototipo3
 ```
 
@@ -542,7 +652,7 @@ git submodule add https://github.com/Swarch2F/broker.git components/broker
 git submodule add https://github.com/Swarch2F/api-gateway.git components/api-gateway
 ```
 
-### Actualización de submódulos recursivamente (por primer vez, una vez clonado el proyecto. Si realizo el clonado con "git clone --recursive" no es necesario):
+### Actualización de submódulos recursivamente (Si realizo el clonado con "git clone --recursive" no es necesario):
 
 ```bash
 git submodule update --init --recursive
@@ -552,9 +662,8 @@ git submodule update --remote --merge --recursive
 ### Levantar el prototipo con Docker Compose
 
 El proyecto utiliza Docker Compose para gestionar la ejecución de todos los servicios.
-Para descargar la aplicacion de escritorio, puedes descargarlo de: https://drive.google.com/drive/folders/1sZOGRAUARZDUAfDL4Kh2wrnzubOO6FbK?usp=sharing
 
-### Ejecución rápida
+### Ejecución
 
 Una vez clonado el proyecto, ejecuta:
 
@@ -563,4 +672,4 @@ docker compose up --build
 ```
 
 ---
-**© 2025 Swarch2F. GRADEX Prototipo 3** 
+**© 2025 Swarch2F. GRADEX Prototipo 4** 
